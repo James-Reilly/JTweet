@@ -24,21 +24,25 @@ public class LoginActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //Fabric Authentication
         TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
         Fabric.with(this, new Twitter(authConfig));
+        //Set Login View
         setContentView(R.layout.activity_login);
+
+        //Check if there is a current session and skip to dashboard if there is
         TwitterSession session = Twitter.getSessionManager().getActiveSession();
         if (session != null){
             startDashboard();
         }
+
+        //Load the login button and assign it a CallBack
         mLoginButton = (TwitterLoginButton)
                 findViewById(R.id.login_button);
         mLoginButton.setCallback(new Callback<TwitterSession>() {
             @Override
             public void success(Result<TwitterSession> result) {
-                // Do something with result, which provides a
-                // TwitterSession for making API calls
-
+                //Starts the main activity
                 startDashboard();
 
             }
