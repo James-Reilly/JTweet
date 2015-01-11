@@ -1,7 +1,8 @@
 package me.jreilly.JamesTweet;
 
-
+import android.app.Activity;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -15,25 +16,26 @@ import android.widget.Toast;
 
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
-import com.twitter.sdk.android.core.OAuthSigning;
 import com.twitter.sdk.android.core.Result;
-import com.twitter.sdk.android.core.TwitterAuthConfig;
-import com.twitter.sdk.android.core.TwitterAuthToken;
-import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.models.Tweet;
+import com.twitter.sdk.android.core.models.User;
 import com.twitter.sdk.android.core.services.StatusesService;
-import com.twitter.sdk.android.tweetui.TweetUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+
+import me.jreilly.JamesTweet.R;
 
 
-/**
- * A simple {@link Fragment} subclass.
- */
-public class DashFragment extends android.support.v4.app.Fragment {
+public class ProfileFragment extends android.support.v4.app.Fragment {
+    // TODO: Rename parameter arguments, choose names that match
+    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+    private static final String ARG_PARAM1 = "param1";
+    private static final String ARG_PARAM2 = "param2";
+
+    // TODO: Rename and change types of parameters
+    private long mUserId;
 
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
@@ -42,16 +44,45 @@ public class DashFragment extends android.support.v4.app.Fragment {
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private String[] mDataset;
     private final String LOG_TAG = "TweetFetcher";
-    private int mTotalItems = 20;
 
 
 
-    public DashFragment() {
+
+
+    /**
+     * Use this factory method to create a new instance of
+     * this fragment using the provided parameters.
+     *
+     *
+     * @return A new instance of fragment ProfileFragment.
+     */
+    // TODO: Rename and change types and number of parameters
+    public static ProfileFragment newInstance(long userId) {
+        ProfileFragment fragment = new ProfileFragment();
+        Bundle args = new Bundle();
+        args.putLong(ARG_PARAM1, userId);
+
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    public ProfileFragment() {
+        // Required empty public constructor
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            mUserId = getArguments().getLong(ARG_PARAM1);
+
+        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_timeline);
 
@@ -59,7 +90,7 @@ public class DashFragment extends android.support.v4.app.Fragment {
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh(){
-                getMainUserTweets(true);
+                getTweets(true);
             }
 
         });
@@ -75,35 +106,29 @@ public class DashFragment extends android.support.v4.app.Fragment {
 
         mRecyclerView.setOnScrollListener(
                 new EndlessRecyclerOnScrollListener((LinearLayoutManager)mLayoutManager) {
-                  @Override
-                  public void onLoadMore() {
-                      mTotalItems += 20;
-                      mSwipeRefreshLayout.setRefreshing(true);
-                      getMainUserTweets(false);
-                  }
-              });
+                    @Override
+                    public void onLoadMore() {
 
-        getMainUserTweets(true);
+                        mSwipeRefreshLayout.setRefreshing(true);
+                        getTweets(false);
+                    }
+                });
+
+        getTweets(true);
 
         return rootView;
+        // Inflate the layout for this fragment
+
     }
 
-    @Override
-    public void onResume(){
-        super.onResume();
-        getMainUserTweets(true);
-    }
 
-    /*
-    Pulls the hometimeline of the user current session's user
-    It updates the data with the new tweets
-     */
-    public void getMainUserTweets(boolean pageRefresh) {
 
+
+    public void getTweets(Boolean pageRefresh){
         final StatusesService service = Twitter.getApiClient().getStatusesService();
 
         if (pageRefresh){
-            service.homeTimeline(50, null, null, null, null, null, null, new Callback<List<Tweet>>() {
+            service.userTimeline(mUserId, null, 50, null, null, null, null,null,null, new Callback<List<Tweet>>() {
                 @Override
                 public void success(Result<List<Tweet>> listResult) {
                     mTweetObjects.clear();
@@ -120,9 +145,9 @@ public class DashFragment extends android.support.v4.app.Fragment {
                     mSwipeRefreshLayout.setRefreshing(false);
                 }
             });
-        } else if (mTweetObjects.size() != 200) {
-            long maxId = mTweetObjects.get(mTotalItems - 20 - 1).id;
-            service.homeTimeline(51, null, maxId, null, null, null, null, new Callback<List<Tweet>>() {
+        } else if (mTweetObjects.size() < 200) {
+            long maxId = mTweetObjects.get(mTweetObjects.size() - 1).id;
+            service.userTimeline(mUserId, null, 50, null, maxId, null, null,null,null, new Callback<List<Tweet>>() {
                 @Override
                 public void success(Result<List<Tweet>> listResult) {
 
@@ -185,4 +210,5 @@ public class DashFragment extends android.support.v4.app.Fragment {
 
 
     }
+
 }

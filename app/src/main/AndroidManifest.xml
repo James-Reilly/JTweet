@@ -12,6 +12,7 @@
         <activity
             android:name="me.jreilly.JamesTweet.DashActivity"
             android:label="@string/app_name" >
+
         </activity>
 
         <meta-data

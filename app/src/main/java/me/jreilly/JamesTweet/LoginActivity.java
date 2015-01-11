@@ -26,6 +26,7 @@ public class LoginActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         //Fabric Authentication
         TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
+
         Fabric.with(this, new Twitter(authConfig));
         //Set Login View
         setContentView(R.layout.activity_login);
@@ -90,6 +91,7 @@ public class LoginActivity extends ActionBarActivity {
     public void startDashboard(){
         final Intent mIntent = new Intent(LoginActivity.this,
                 DashActivity.class);
+        finish();
         startActivity(mIntent);
     }
 }
