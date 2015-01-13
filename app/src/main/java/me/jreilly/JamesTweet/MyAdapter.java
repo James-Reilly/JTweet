@@ -1,5 +1,6 @@
 package me.jreilly.JamesTweet;
 
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v7.widget.RecyclerView;
@@ -25,6 +26,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
     private ArrayList<Tweet> mDataset;
     private int currentPosition;
+    private Cursor mCursor;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView mTweet;

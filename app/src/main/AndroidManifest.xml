@@ -8,6 +8,7 @@
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
+        android:name="me.jreilly.JamesTweet.TweetTweet"
         android:theme="@style/AppTheme" >
         <activity
             android:name="me.jreilly.JamesTweet.DashActivity"
@@ -28,6 +29,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service android:name=".TimelineService"/>
     </application>
 
 </manifest>
