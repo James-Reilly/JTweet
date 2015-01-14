@@ -194,7 +194,7 @@ public class DashFragment extends android.support.v4.app.Fragment {
 
             Log.e(LOG_TAG, "Getting Tweets!");
             final StatusesService service = Twitter.getApiClient().getStatusesService();
-            service.homeTimeline(200, null, null, null, null, null, null, new Callback<List<Tweet>>() {
+            service.homeTimeline(50, null, null, null, null, null, true, new Callback<List<Tweet>>() {
                 @Override
                 public void success(Result<List<Tweet>> listResult) {
                     boolean statusChanges = false;
@@ -250,7 +250,7 @@ public class DashFragment extends android.support.v4.app.Fragment {
             long tweetId = mCursor.getLong(mCursor.getColumnIndex(BaseColumns._ID));
             final StatusesService service = Twitter.getApiClient().getStatusesService();
 
-            service.homeTimeline(200, null, tweetId, null, null, null, null, new Callback<List<Tweet>>() {
+            service.homeTimeline(50, null, tweetId, null, null, null, true, new Callback<List<Tweet>>() {
                 @Override
                 public void success(Result<List<Tweet>> listResult) {
                     boolean statusChanges = false;

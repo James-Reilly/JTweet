@@ -72,6 +72,7 @@ public class TweetDataHelper extends SQLiteOpenHelper {
             homeValues.put(HOME_COL, tweet.id);
             homeValues.put(UPDATE_COL, tweet.text);
             homeValues.put(USER_COL, tweet.user.screenName);
+
             /*
             String dateStr = tweet.createdAt;
             Date date = new SimpleDateFormat("MMM", Locale.ENGLISH).parse(dateStr.substring(5,9));
