@@ -35,11 +35,14 @@ public class TweetDataHelper extends SQLiteOpenHelper {
     private static final String TIME_COL = "update_time";
     /**user profile image*/
     private static final String USER_IMG = "user_img";
+    /**tweet media url*/
+    private static final String MEDIA_COL = "update_media";
 
     //Database creation string
     private static final String DATABASE_CREATE = "CREATE TABLE home (" + HOME_COL +
             " INTEGER NOT NULL PRIMARY KEY, " + UPDATE_COL + " TEXT, " + USER_COL +
-            " TEXT, " + TIME_COL + " INTEGER, " + USER_IMG + " TEXT);";
+            " TEXT, " + TIME_COL + " INTEGER, " + USER_IMG + " TEXT, " + MEDIA_COL + " TEXT);";
+
 
     TweetDataHelper(Context context){
 
@@ -90,6 +93,11 @@ public class TweetDataHelper extends SQLiteOpenHelper {
 */
             homeValues.put(TIME_COL, tweet.createdAt);
             homeValues.put(USER_IMG, tweet.user.profileImageUrl);
+            if (tweet.entities != null && (tweet.entities.media != null)){
+                homeValues.put(MEDIA_COL, tweet.entities.media.get(0).mediaUrl);
+            } else {
+                homeValues.put(MEDIA_COL, "null");
+            }
         } catch (Exception te){ Log.e("TweetDataHelper", te.getMessage()); }
 
         return homeValues;
