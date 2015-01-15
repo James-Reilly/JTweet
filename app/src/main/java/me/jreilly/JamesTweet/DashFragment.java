@@ -60,7 +60,8 @@ public class DashFragment extends android.support.v4.app.Fragment {
     private TimelineExtender mTimelineExtender;
 
 
-
+    private int mShortAnimationDuration;
+    private View fragView;
 
 
 
@@ -71,10 +72,14 @@ public class DashFragment extends android.support.v4.app.Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        fragView = rootView;
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_timeline);
 
         mTimelineUpdater = new TimelineUpdater();
         mTimelineExtender = new TimelineExtender();
+
+        mShortAnimationDuration = getResources().getInteger(
+                android.R.integer.config_shortAnimTime);
 
 
 
@@ -134,7 +139,7 @@ public class DashFragment extends android.support.v4.app.Fragment {
             //manage the updates using a cursor
 
             //instantiate adapter
-            mTweetAdapter = new TweetAdapter(mCursor);
+            mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration);
             //apply the adapter to the timeline view
             //this will make it populate the new update data in the view
             mRecyclerView.setAdapter(mTweetAdapter);
@@ -181,7 +186,7 @@ public class DashFragment extends android.support.v4.app.Fragment {
             }
             mCursor = mTimelineDB.query("home", null, null, null, null, null, "update_time DESC");
             getActivity().startManagingCursor(mCursor);
-            mTweetAdapter = new TweetAdapter(mCursor);
+            mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration);
             mRecyclerView.setAdapter(mTweetAdapter);
 
         }
@@ -209,7 +214,7 @@ public class DashFragment extends android.support.v4.app.Fragment {
                     }
 
                     if (statusChanges){
-                        int rowLimit = 1000;
+                        int rowLimit = 600;
                         if(DatabaseUtils.queryNumEntries(mTimelineDB, "home") > rowLimit) {
                             String deleteQuery = "DELETE FROM home WHERE "+BaseColumns._ID+" NOT IN " +
                                     "(SELECT "+BaseColumns._ID+" FROM home ORDER BY "+"update_time DESC " +
@@ -218,7 +223,7 @@ public class DashFragment extends android.support.v4.app.Fragment {
                         }
                         mCursor = mTimelineDB.query("home", null, null, null, null, null, "update_time DESC");
                         getActivity().startManagingCursor(mCursor);
-                        mTweetAdapter = new TweetAdapter(mCursor);
+                        mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration);
                         mRecyclerView.setAdapter(mTweetAdapter);
 
                     }
@@ -267,7 +272,7 @@ public class DashFragment extends android.support.v4.app.Fragment {
 
 
                     if (statusChanges){
-                        int rowLimit = 1000;
+                        int rowLimit = 600;
                         if(DatabaseUtils.queryNumEntries(mTimelineDB, "home") > rowLimit) {
                             String deleteQuery = "DELETE FROM home WHERE "+BaseColumns._ID+" NOT IN " +
                                     "(SELECT "+BaseColumns._ID+" FROM home ORDER BY "+"update_time DESC " +
@@ -276,7 +281,7 @@ public class DashFragment extends android.support.v4.app.Fragment {
                         }
                         mCursor = mTimelineDB.query("home", null, null, null, null, null, "update_time DESC");
                         getActivity().startManagingCursor(mCursor);
-                        mTweetAdapter = new TweetAdapter(mCursor);
+                        mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration);
                         mRecyclerView.setAdapter(mTweetAdapter);
 
                     }
