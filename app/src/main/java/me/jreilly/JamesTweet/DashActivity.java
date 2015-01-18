@@ -25,8 +25,11 @@ import com.twitter.sdk.android.core.models.Tweet;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.jreilly.JamesTweet.TweetParsers.ProfileLink;
+import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 
-public class DashActivity extends ActionBarActivity {
+
+public class DashActivity extends ActionBarActivity{
 
     // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
 
@@ -81,14 +84,14 @@ public class DashActivity extends ActionBarActivity {
                 if (child != null && mGestureDetector.onTouchEvent(e)){
                     mDrawer.closeDrawers();
                     if(navItems[rv.getChildPosition(child)].equals("Profile")){
-                        long uId = Twitter.getSessionManager().getActiveSession().getUserId();
+                        String uId = Twitter.getSessionManager().getActiveSession().getUserName();
                         /*
                         Bundle bundle = new Bundle();
                         bundle.putLong("param1", uId);
                         ProfileFragment fragPro = new ProfileFragment()
                         */
                         getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.content_frame, ProfileFragment.newInstance(uId)).commit();
+                                .replace(R.id.content_frame, ProfileFragment.newInstance(uId)).addToBackStack(null).commit();
                     } else if (navItems[rv.getChildPosition(child)].equals("Timeline")){
                         getSupportFragmentManager().beginTransaction()
                                 .replace(R.id.content_frame, new DashFragment()).commit();
@@ -133,6 +136,8 @@ public class DashActivity extends ActionBarActivity {
         }
 
     }
+
+
 
 
     @Override

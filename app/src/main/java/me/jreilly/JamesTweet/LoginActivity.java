@@ -91,7 +91,8 @@ public class LoginActivity extends ActionBarActivity {
     public void startDashboard(){
         final Intent mIntent = new Intent(LoginActivity.this,
                 DashActivity.class);
-        finish();
+
         startActivity(mIntent);
+        finish();
     }
 }

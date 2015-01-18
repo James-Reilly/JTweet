@@ -32,11 +32,14 @@ import com.twitter.sdk.android.core.services.StatusesService;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.jreilly.JamesTweet.TweetParsers.ProfileLink;
+import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
+
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class DashFragment extends android.support.v4.app.Fragment {
+public class DashFragment extends android.support.v4.app.Fragment implements ProfileSwitch {
 
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
@@ -63,6 +66,7 @@ public class DashFragment extends android.support.v4.app.Fragment {
     private int mShortAnimationDuration;
     private View fragView;
 
+    private ProfileSwitch mFragment;
 
 
     public DashFragment() {
@@ -77,7 +81,7 @@ public class DashFragment extends android.support.v4.app.Fragment {
 
         mTimelineUpdater = new TimelineUpdater();
         mTimelineExtender = new TimelineExtender();
-
+        mFragment = this;
         mShortAnimationDuration = getResources().getInteger(
                 android.R.integer.config_shortAnimTime);
 
@@ -139,7 +143,8 @@ public class DashFragment extends android.support.v4.app.Fragment {
             //manage the updates using a cursor
 
             //instantiate adapter
-            mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration);
+            mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration, mFragment );
+
             //apply the adapter to the timeline view
             //this will make it populate the new update data in the view
             mRecyclerView.setAdapter(mTweetAdapter);
@@ -155,6 +160,11 @@ public class DashFragment extends android.support.v4.app.Fragment {
 
         }
         catch(Exception te) { Log.e(LOG_TAG, "Failed to fetch timeline: "+te.getMessage()); }
+    }
+
+    public void swapToProfile(String uId){
+        getActivity().getSupportFragmentManager().beginTransaction()
+                .replace(R.id.content_frame, ProfileFragment.newInstance(uId)).addToBackStack(null).commit();
     }
 
     @Override
@@ -177,7 +187,7 @@ public class DashFragment extends android.support.v4.app.Fragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.e("Reciver", "Recieiving?");
-            int rowLimit = 1000;
+            int rowLimit = 600;
             if(DatabaseUtils.queryNumEntries(mTimelineDB, "home") > rowLimit) {
                 String deleteQuery = "DELETE FROM home WHERE "+BaseColumns._ID+" NOT IN " +
                         "(SELECT "+BaseColumns._ID+" FROM home ORDER BY "+"update_time DESC " +
@@ -186,7 +196,7 @@ public class DashFragment extends android.support.v4.app.Fragment {
             }
             mCursor = mTimelineDB.query("home", null, null, null, null, null, "update_time DESC");
             getActivity().startManagingCursor(mCursor);
-            mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration);
+            mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration, mFragment);
             mRecyclerView.setAdapter(mTweetAdapter);
 
         }
@@ -223,7 +233,7 @@ public class DashFragment extends android.support.v4.app.Fragment {
                         }
                         mCursor = mTimelineDB.query("home", null, null, null, null, null, "update_time DESC");
                         getActivity().startManagingCursor(mCursor);
-                        mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration);
+                        mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration, mFragment);
                         mRecyclerView.setAdapter(mTweetAdapter);
 
                     }
@@ -281,7 +291,7 @@ public class DashFragment extends android.support.v4.app.Fragment {
                         }
                         mCursor = mTimelineDB.query("home", null, null, null, null, null, "update_time DESC");
                         getActivity().startManagingCursor(mCursor);
-                        mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration);
+                        mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration, mFragment);
                         mRecyclerView.setAdapter(mTweetAdapter);
 
                     }

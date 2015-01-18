@@ -4,14 +4,18 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.app.ActionBar;
 import android.database.Cursor;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.provider.BaseColumns;
 import android.support.v7.widget.RecyclerView;
+import android.text.SpannableString;
 import android.text.format.DateUtils;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,29 +37,37 @@ import com.twitter.sdk.android.tweetui.TweetView;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import me.jreilly.JamesTweet.TweetParsers.ProfileLink;
+import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 
 /**
  * Created by jreilly on 1/12/15.
  */
 public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> {
 
-    private ArrayList<Tweet> mDataset;
-    private int currentPosition;
+    private static final int TYPE_TEXT_ONLY = 0;
+    private static final int TYPE_IMAGE = 0;
+    private static final int TYPE_URL = 0;
+
+
+
     private Cursor mCursor;
-    private ImageLoader mImageLoader;
+
     private Animator mCurrentAnimator;
     private int mShortAnimationDuration;
     private View mFragView;
 
-    /**strings representing database column names to map to views*/
-    static final String[] from = { "update_text", "user_screen",
-            "update_time", "user_img" };
+    private ProfileSwitch mActivity;
+
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView mTweet;
         public TextView mUser;
         public ImageButton mImage;
-        public ImageView mProfileImage;
+        public ImageButton mProfileImage;
 
         public View mlayout;
         public ViewHolder(View list_item){
@@ -63,16 +75,17 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
             mUser = (TextView) list_item.findViewById(R.id.my_user);
             mTweet = (TextView) list_item.findViewById(R.id.my_text);
             mImage = (ImageButton) list_item.findViewById(R.id.my_picture);
-            mProfileImage = (ImageView) list_item.findViewById(R.id.user_image);
+            mProfileImage = (ImageButton) list_item.findViewById(R.id.user_image);
 
         }
     }
 
-    public TweetAdapter(Cursor cursor, View fragView, int time){
-        mImageLoader = VolleySingleton.getInstance().getImageLoader();
+    public TweetAdapter(Cursor cursor, View fragView, int time, ProfileSwitch Activity){
+
         mCursor = cursor;
         mShortAnimationDuration = time;
         mFragView = fragView;
+        mActivity = Activity;
     }
 
     @Override
@@ -88,7 +101,7 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
     }
 
     @Override
-    public void onBindViewHolder(final TweetAdapter.ViewHolder viewHolder, int i) {
+    public void onBindViewHolder(final TweetAdapter.ViewHolder viewHolder, final int i) {
 
         if(!mCursor.moveToPosition(i)){
             Log.e("TweetAdapter", "Illegal State Exception!");
@@ -100,24 +113,41 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
                     mCursor.getColumnIndex("user_img"))).into(
                     viewHolder.mProfileImage
             );
-            String imageUrl = mCursor.getString(mCursor.getColumnIndex("update_media"));
+            viewHolder.mProfileImage.setOnClickListener( new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    if(!mCursor.moveToPosition(i)){
+                        Log.e("TweetAdapter", "Illegal State Exception!");
+
+                    } else {
+                        mActivity.swapToProfile(
+                                mCursor.getString(mCursor.getColumnIndex("user_screen")));
+                    }
+                }
+            });
+            final String imageUrl = mCursor.getString(mCursor.getColumnIndex("update_media"));
+            ViewGroup.LayoutParams params =  viewHolder.mImage.getLayoutParams();
             if (!imageUrl.equals("null")){
-                Picasso.with(viewHolder.mImage.getContext()).load(imageUrl).into(
+
+                viewHolder.mImage.getLayoutParams().height = 400;
+                Picasso.with(viewHolder.mImage.getContext()).load(imageUrl).fit().centerCrop().into(
                         viewHolder.mImage
-
-
                 );
 
                 viewHolder.mImage.setOnClickListener( new View.OnClickListener() {
 
                     @Override
                     public void onClick(View v) {
-                        zoomImageFromThumb(viewHolder.mImage, mFragView, viewHolder.mImage.getDrawable());
+                        zoomImageFromThumb(viewHolder.mImage, mFragView, imageUrl);
 
                     }
                 });
             } else {
                 viewHolder.mImage.setImageDrawable(null);
+
+                viewHolder.mImage.getLayoutParams().height = 0;
+
             }
 
 
@@ -125,7 +155,25 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
 
             String createdAt = mCursor.getString(mCursor.getColumnIndex("update_time"));
             viewHolder.mUser.setText(mCursor.getString(mCursor.getColumnIndex("user_screen")));
-            viewHolder.mTweet.setText(mCursor.getString(mCursor.getColumnIndex("update_text")));
+            String tweetText = mCursor.getString(mCursor.getColumnIndex("update_text"));
+
+            ArrayList<int[]> hashtagSpans = getSpans(tweetText, '#');
+            ArrayList<int[]> profileSpans = getSpans(tweetText, '@');
+
+            SpannableString tweetContent = new SpannableString(tweetText);
+
+            for( int j = 0; j < profileSpans.size(); j ++){
+                int[] span = profileSpans.get(j);
+                int profileStart = span[0];
+                int profileEnd = span[1];
+
+                tweetContent.setSpan(new ProfileLink(viewHolder.mTweet.getContext(), mActivity),
+                        profileStart, profileEnd, 0);
+            }
+            viewHolder.mTweet.setMovementMethod(LinkMovementMethod.getInstance());
+            viewHolder.mTweet.setText(tweetContent);
+
+
 
         }
 
@@ -136,8 +184,25 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
         return mCursor.getCount();
     }
 
+    public ArrayList<int[]> getSpans(String body, char prefix) {
+        ArrayList<int[]> spans = new ArrayList<int[]>();
 
-    private void zoomImageFromThumb(final View thumbView, final View mainView ,Drawable imageResId) {
+        Pattern pattern = Pattern.compile(prefix + "\\w+");
+        Matcher matcher = pattern.matcher(body);
+
+        // Check all occurrences
+        while (matcher.find()) {
+            int[] currentSpan = new int[2];
+            currentSpan[0] = matcher.start();
+            currentSpan[1] = matcher.end();
+            spans.add(currentSpan);
+        }
+
+        return  spans;
+    }
+
+
+    private void zoomImageFromThumb(final View thumbView, final View mainView ,String imageResUrl) {
         // If there's an animation in progress, cancel it
         // immediately and proceed with this one.
         if (mCurrentAnimator != null) {
@@ -147,7 +212,9 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
         // Load the high-resolution "zoomed-in" image.
         final ImageView expandedImageView = (ImageView) mainView.findViewById(
                 R.id.expanded_image);
-        expandedImageView.setImageDrawable(imageResId);
+        Picasso.with(expandedImageView.getContext()).load(imageResUrl).into(
+                expandedImageView);
+
 
         // Calculate the starting and ending bounds for the zoomed-in image.
         // This step involves lots of math. Yay, math.
@@ -227,10 +294,12 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
         set.start();
         mCurrentAnimator = set;
 
+
         // Upon clicking the zoomed-in image, it should zoom back down
         // to the original bounds and show the thumbnail instead of
         // the expanded image.
         final float startScaleFinal = startScale;
+
         expandedImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

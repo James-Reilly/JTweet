@@ -26,16 +26,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import me.jreilly.JamesTweet.R;
+import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 
 
-public class ProfileFragment extends android.support.v4.app.Fragment {
+public class ProfileFragment extends android.support.v4.app.Fragment implements ProfileSwitch {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
     // TODO: Rename and change types of parameters
-    private long mUserId;
+    private String mUserId;
 
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
@@ -44,6 +45,10 @@ public class ProfileFragment extends android.support.v4.app.Fragment {
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private String[] mDataset;
     private final String LOG_TAG = "TweetFetcher";
+
+    private int mShortAnimationDuration;
+    private View fragView;
+    private ProfileSwitch mFragment;
 
 
 
@@ -57,10 +62,10 @@ public class ProfileFragment extends android.support.v4.app.Fragment {
      * @return A new instance of fragment ProfileFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static ProfileFragment newInstance(long userId) {
+    public static ProfileFragment newInstance(String screenName) {
         ProfileFragment fragment = new ProfileFragment();
         Bundle args = new Bundle();
-        args.putLong(ARG_PARAM1, userId);
+        args.putString(ARG_PARAM1, screenName);
 
         fragment.setArguments(args);
         return fragment;
@@ -74,7 +79,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mUserId = getArguments().getLong(ARG_PARAM1);
+            mUserId = getArguments().getString(ARG_PARAM1);
 
         }
     }
@@ -85,6 +90,12 @@ public class ProfileFragment extends android.support.v4.app.Fragment {
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_timeline);
+
+        //Variables for Adapter
+        fragView = rootView;
+        mFragment = this;
+        mShortAnimationDuration = getResources().getInteger(
+                android.R.integer.config_shortAnimTime);
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.fragment_main_swipe_refresh_layout);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -100,7 +111,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment {
 
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        mAdapter = new MyAdapter(mTweetObjects);
+        mAdapter = new MyAdapter(mTweetObjects, fragView, mShortAnimationDuration, mFragment );
         mRecyclerView.setAdapter(mAdapter);
 
 
@@ -121,6 +132,11 @@ public class ProfileFragment extends android.support.v4.app.Fragment {
 
     }
 
+    public void swapToProfile(String uId){
+        getActivity().getSupportFragmentManager().beginTransaction()
+                .replace(R.id.content_frame, ProfileFragment.newInstance(uId)).addToBackStack(null).commit();
+    }
+
 
 
 
@@ -128,7 +144,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment {
         final StatusesService service = Twitter.getApiClient().getStatusesService();
 
         if (pageRefresh){
-            service.userTimeline(mUserId, null, 50, null, null, null, null,null,null, new Callback<List<Tweet>>() {
+            service.userTimeline(null, mUserId, 50, null, null, null, null,null,null, new Callback<List<Tweet>>() {
                 @Override
                 public void success(Result<List<Tweet>> listResult) {
                     mTweetObjects.clear();
@@ -147,7 +163,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment {
             });
         } else if (mTweetObjects.size() < 200) {
             long maxId = mTweetObjects.get(mTweetObjects.size() - 1).id;
-            service.userTimeline(mUserId, null, 50, null, maxId, null, null,null,null, new Callback<List<Tweet>>() {
+            service.userTimeline(null, mUserId, 50, null, maxId, null, null,null,null, new Callback<List<Tweet>>() {
                 @Override
                 public void success(Result<List<Tweet>> listResult) {
 
