@@ -19,8 +19,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
-import android.widget.Toast;
 
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
@@ -32,7 +30,7 @@ import com.twitter.sdk.android.core.services.StatusesService;
 import java.util.ArrayList;
 import java.util.List;
 
-import me.jreilly.JamesTweet.TweetParsers.ProfileLink;
+import me.jreilly.JamesTweet.Adapters.TweetAdapter;
 import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 
 
@@ -42,30 +40,31 @@ import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 public class DashFragment extends android.support.v4.app.Fragment implements ProfileSwitch {
 
     private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private ArrayList<Tweet> mTweetObjects = new ArrayList<>();
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private String[] mDataset;
-    private final String LOG_TAG = "TweetFetcher";
-    private int mTotalItems = 20;
+
+    private final String LOG_TAG = "DashFragment";
+    private int mMaxItems = 600;
 
 
-    //tWITTER DATABASE objects
 
+    /*variables for the timeline database and reciever */
     private TweetDataHelper mHelper;
     private SQLiteDatabase mTimelineDB;
     private Cursor mCursor;
     private TweetAdapter mTweetAdapter;
     private BroadcastReceiver mTweetReciever;
 
+
+    /*Variables for updating the timeline */
     private TimelineUpdater mTimelineUpdater;
     private TimelineExtender mTimelineExtender;
 
 
+    /*Variables for the adapter */
     private int mShortAnimationDuration;
     private View fragView;
-
     private ProfileSwitch mFragment;
 
 
@@ -76,11 +75,17 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        fragView = rootView;
+
+        //Inflate the Recyclerview
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_timeline);
 
+        //Initilize the Classes that refresh the timeline and extend the timeline on scrolling;
         mTimelineUpdater = new TimelineUpdater();
         mTimelineExtender = new TimelineExtender();
+
+
+        //Initialize Variables for Adapter and (ProfileSwitch)
+        fragView = rootView;
         mFragment = this;
         mShortAnimationDuration = getResources().getInteger(
                 android.R.integer.config_shortAnimTime);
@@ -88,7 +93,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
 
 
 
-
+        //Enable pull down to refresh
         mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.fragment_main_swipe_refresh_layout);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -99,18 +104,15 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
 
         });
 
+        //Initialize the layout to a LinearLayout
         mLayoutManager = new LinearLayoutManager(getActivity());
-
-
         mRecyclerView.setLayoutManager(mLayoutManager);
 
+        //Sets up the timeline with a DB and a cursor
+        //It also sets up the service
         setupTimeline();
 
-
-
-
-
-
+        //Allows endless scrolling (theoretically)
         mRecyclerView.setOnScrollListener(
                 new EndlessRecyclerOnScrollListener((LinearLayoutManager)mLayoutManager) {
                   @Override
@@ -120,12 +122,17 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
 
                   }
               });
-//
-//        getMainUserTweets(true);
+
 
         return rootView;
     }
 
+    /**
+    setupTimeline()
+
+     Initializes the database helper, the database, the TweetAdapter to fill the Recycler view,
+     and intializes the The Tweet Service which collects new tweets every 5 minutes.
+     */
     public void setupTimeline() {
 
         try
@@ -224,7 +231,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
                     }
 
                     if (statusChanges){
-                        int rowLimit = 600;
+                        int rowLimit = mMaxItems;
                         if(DatabaseUtils.queryNumEntries(mTimelineDB, "home") > rowLimit) {
                             String deleteQuery = "DELETE FROM home WHERE "+BaseColumns._ID+" NOT IN " +
                                     "(SELECT "+BaseColumns._ID+" FROM home ORDER BY "+"update_time DESC " +
@@ -282,7 +289,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
 
 
                     if (statusChanges){
-                        int rowLimit = 600;
+                        int rowLimit = mMaxItems;
                         if(DatabaseUtils.queryNumEntries(mTimelineDB, "home") > rowLimit) {
                             String deleteQuery = "DELETE FROM home WHERE "+BaseColumns._ID+" NOT IN " +
                                     "(SELECT "+BaseColumns._ID+" FROM home ORDER BY "+"update_time DESC " +

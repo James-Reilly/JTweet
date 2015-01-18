@@ -1,7 +1,5 @@
 package me.jreilly.JamesTweet;
 
-import android.content.pm.PackageInstaller;
-import android.provider.ContactsContract;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -9,24 +7,15 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.ListView;
-import android.widget.Toast;
 
 import com.twitter.sdk.android.Twitter;
-import com.twitter.sdk.android.core.Session;
-import com.twitter.sdk.android.core.models.Tweet;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import me.jreilly.JamesTweet.TweetParsers.ProfileLink;
-import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
+import me.jreilly.JamesTweet.Adapters.NavAdapter;
 
 
 public class DashActivity extends ActionBarActivity{
@@ -41,13 +30,13 @@ public class DashActivity extends ActionBarActivity{
 
     ActionBarDrawerToggle mDrawerToggle;
 
+    /*String Array of the navigation drawer items */
     String[] navItems = {
             "Profile",
             "Timeline",
             "Mentions",
             "Favorites",
             "Settings"
-
     };
 
 
@@ -57,8 +46,6 @@ public class DashActivity extends ActionBarActivity{
         setContentView(R.layout.activity_main);
 
         //Setting the navigation drawer
-
-
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mDrawerView = (RecyclerView) findViewById(R.id.left_drawer);
@@ -68,6 +55,7 @@ public class DashActivity extends ActionBarActivity{
 
         mDrawerView.setAdapter(mAdapter);
 
+        //Detect swipe to open navigation drawer
         final GestureDetector mGestureDetector = new GestureDetector(DashActivity.this, new GestureDetector.SimpleOnGestureListener(){
            @Override
            public boolean onSingleTapUp(MotionEvent e){
@@ -84,24 +72,17 @@ public class DashActivity extends ActionBarActivity{
                 if (child != null && mGestureDetector.onTouchEvent(e)){
                     mDrawer.closeDrawers();
                     if(navItems[rv.getChildPosition(child)].equals("Profile")){
+                        //Get Screen name of User
                         String uId = Twitter.getSessionManager().getActiveSession().getUserName();
-                        /*
-                        Bundle bundle = new Bundle();
-                        bundle.putLong("param1", uId);
-                        ProfileFragment fragPro = new ProfileFragment()
-                        */
+                        //
                         getSupportFragmentManager().beginTransaction()
                                 .replace(R.id.content_frame, ProfileFragment.newInstance(uId)).addToBackStack(null).commit();
                     } else if (navItems[rv.getChildPosition(child)].equals("Timeline")){
                         getSupportFragmentManager().beginTransaction()
                                 .replace(R.id.content_frame, new DashFragment()).commit();
                     }
-
                     return true;
                 }
-
-
-
                 return false;
             }
 

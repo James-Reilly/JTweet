@@ -1,10 +1,7 @@
 package me.jreilly.JamesTweet;
 
-import android.app.Activity;
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -19,13 +16,12 @@ import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.models.Tweet;
-import com.twitter.sdk.android.core.models.User;
 import com.twitter.sdk.android.core.services.StatusesService;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import me.jreilly.JamesTweet.R;
+import me.jreilly.JamesTweet.Adapters.NetTweetAdapter;
 import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 
 
@@ -111,7 +107,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
 
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        mAdapter = new MyAdapter(mTweetObjects, fragView, mShortAnimationDuration, mFragment );
+        mAdapter = new NetTweetAdapter(mTweetObjects, fragView, mShortAnimationDuration, mFragment );
         mRecyclerView.setAdapter(mAdapter);
 
 
