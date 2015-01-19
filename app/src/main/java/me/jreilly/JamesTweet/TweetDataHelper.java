@@ -37,11 +37,22 @@ public class TweetDataHelper extends SQLiteOpenHelper {
     private static final String USER_IMG = "user_img";
     /**tweet media url*/
     private static final String MEDIA_COL = "update_media";
+    /**favorite boolean*/
+    private static final String FAVORITE_COL = "update_favorite";
+    /**retweet boolean*/
+    private static final String RETWEET_COL = "update_retweet";
+    /**if current tweet is retweed boolean*/
+    private static final String RETWEETED_COL = "update_retweeted";
+    /**if current tweet is retweed boolean*/
+    private static final String ORIGINAL_COL = "update_original";
+
+
+
 
     //Database creation string
     private static final String DATABASE_CREATE = "CREATE TABLE home (" + HOME_COL +
             " INTEGER NOT NULL PRIMARY KEY, " + UPDATE_COL + " TEXT, " + USER_COL +
-            " TEXT, " + TIME_COL + " INTEGER, " + USER_IMG + " TEXT, " + MEDIA_COL + " TEXT);";
+            " TEXT, " + TIME_COL + " INTEGER, " + USER_IMG + " TEXT, " + MEDIA_COL + " TEXT, " + FAVORITE_COL + " INTEGER, " + RETWEET_COL  + " INTEGER, " + RETWEETED_COL + " INTEGER, " + ORIGINAL_COL + " TEXT);";
 
 
     TweetDataHelper(Context context){
@@ -71,34 +82,52 @@ public class TweetDataHelper extends SQLiteOpenHelper {
         ContentValues homeValues = new ContentValues();
 
         //get the values for the database
-        try {
-            homeValues.put(HOME_COL, tweet.id);
-            homeValues.put(UPDATE_COL, tweet.text);
-            homeValues.put(USER_COL, tweet.user.screenName);
+        if(tweet.retweetedStatus == null){
+            try {
+                homeValues.put(HOME_COL, tweet.id);
+                homeValues.put(UPDATE_COL, tweet.text);
+                homeValues.put(USER_COL, tweet.user.screenName);
+                homeValues.put(TIME_COL, tweet.createdAt);
+                homeValues.put(USER_IMG, tweet.user.profileImageUrl);
+                if (tweet.entities != null && (tweet.entities.media != null)){
+                    homeValues.put(MEDIA_COL, tweet.entities.media.get(0).mediaUrl);
+                } else {
+                    homeValues.put(MEDIA_COL, "null");
+                }
+                homeValues.put(FAVORITE_COL, tweet.favorited);
+                homeValues.put(RETWEET_COL, tweet.retweeted);
+                homeValues.put(RETWEETED_COL, 0);
+                homeValues.put(ORIGINAL_COL, tweet.user.screenName);
 
-            /*
-            String dateStr = tweet.createdAt;
-            Date date = new SimpleDateFormat("MMM", Locale.ENGLISH).parse(dateStr.substring(5,9));
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(date);
-            int month = cal.get(Calendar.MONTH);
-            int year = Integer.parseInt(dateStr.substring(dateStr.length()-5));
-
-            int hour = 1;
-            int minute = 1;
-            int second = 1;
 
 
-            GregorianCalendar calendar = new GregorianCalendar()
-*/
-            homeValues.put(TIME_COL, tweet.createdAt);
-            homeValues.put(USER_IMG, tweet.user.profileImageUrl);
-            if (tweet.entities != null && (tweet.entities.media != null)){
-                homeValues.put(MEDIA_COL, tweet.entities.media.get(0).mediaUrl);
-            } else {
-                homeValues.put(MEDIA_COL, "null");
-            }
-        } catch (Exception te){ Log.e("TweetDataHelper", te.getMessage()); }
+            } catch (Exception te){ Log.e("TweetDataHelper", te.getMessage()); }
+        } else {
+            String original = tweet.user.screenName;
+            tweet = tweet.retweetedStatus;
+            try {
+                homeValues.put(HOME_COL, tweet.id);
+                homeValues.put(UPDATE_COL, tweet.text);
+                homeValues.put(USER_COL, tweet.user.screenName);
+                homeValues.put(TIME_COL, tweet.createdAt);
+                homeValues.put(USER_IMG, tweet.user.profileImageUrl);
+                if (tweet.entities != null && (tweet.entities.media != null)){
+                    homeValues.put(MEDIA_COL, tweet.entities.media.get(0).mediaUrl);
+                } else {
+                    homeValues.put(MEDIA_COL, "null");
+                }
+                homeValues.put(FAVORITE_COL, tweet.favorited);
+                homeValues.put(RETWEET_COL, tweet.retweeted);
+                homeValues.put(RETWEETED_COL, 1);
+                homeValues.put(ORIGINAL_COL, original);
+
+
+
+
+            } catch (Exception te){ Log.e("TweetDataHelper", te.getMessage()); }
+        }
+
+
 
         return homeValues;
     }

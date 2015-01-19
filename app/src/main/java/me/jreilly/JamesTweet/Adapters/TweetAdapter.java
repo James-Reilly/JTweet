@@ -4,9 +4,12 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.provider.BaseColumns;
 import android.support.v7.widget.RecyclerView;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
@@ -18,10 +21,20 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterCore;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.models.Tweet;
+import com.twitter.sdk.android.tweetui.LoadCallback;
+import com.twitter.sdk.android.tweetui.TweetUtils;
+import com.twitter.sdk.android.tweetui.TweetView;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,6 +67,9 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
         public TextView mUser;
         public ImageButton mImage;
         public ImageButton mProfileImage;
+        public ImageButton mReplyButton;
+        public ImageButton mRetweetButton;
+        public ImageButton mFavoriteButton;
 
         public View mlayout;
         public ViewHolder(View list_item){
@@ -62,6 +78,9 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
             mTweet = (TextView) list_item.findViewById(R.id.my_text);
             mImage = (ImageButton) list_item.findViewById(R.id.my_picture);
             mProfileImage = (ImageButton) list_item.findViewById(R.id.user_image);
+            mReplyButton = (ImageButton) list_item.findViewById(R.id.my_reply_button);
+            mRetweetButton = (ImageButton) list_item.findViewById(R.id.my_retweet_button);
+            mFavoriteButton = (ImageButton) list_item.findViewById(R.id.my_favorite_button);
 
         }
     }
@@ -140,7 +159,13 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
 
 
             String createdAt = mCursor.getString(mCursor.getColumnIndex("update_time"));
-            viewHolder.mUser.setText(mCursor.getString(mCursor.getColumnIndex("user_screen")));
+            String retweetText = "";
+            if (mCursor.getInt(mCursor.getColumnIndex("update_retweeted")) == 1){
+                retweetText = "Retweeted by ";
+                retweetText += mCursor.getString(mCursor.getColumnIndex("update_original"));
+            }
+            viewHolder.mUser.setText(mCursor.getString(mCursor.getColumnIndex("user_screen"))
+                    + retweetText);
             String tweetText = mCursor.getString(mCursor.getColumnIndex("update_text"));
 
             ArrayList<int[]> hashtagSpans = getSpans(tweetText, '#');
@@ -158,6 +183,56 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
             }
             viewHolder.mTweet.setMovementMethod(LinkMovementMethod.getInstance());
             viewHolder.mTweet.setText(tweetContent);
+
+            viewHolder.mReplyButton.setOnClickListener( new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(viewHolder.mReplyButton.getContext(), "REPLY!",
+                            Toast.LENGTH_SHORT).show();
+
+                }
+            });
+
+            viewHolder.mFavoriteButton.setOnClickListener( new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(viewHolder.mFavoriteButton.getContext(), "FAVORITE!",
+                            Toast.LENGTH_SHORT).show();
+
+                }
+            });
+
+            viewHolder.mRetweetButton.setOnClickListener( new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    if (!mCursor.moveToPosition(i)) {
+                        Log.e("TweetAdapter", "Illegal State Exception!");
+
+                    } else {
+                        final long tweetId = mCursor.getLong(mCursor.getColumnIndex(BaseColumns._ID));
+                        TwitterCore.getInstance().getApiClient().getStatusesService().retweet(tweetId, null, new Callback<Tweet>() {
+
+
+                            @Override
+                            public void success(Result result) {
+                                Toast.makeText(viewHolder.mRetweetButton.getContext(), "RETWEET!",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void failure(TwitterException e) {
+
+                            }
+                        });
+                    }
+                }
+            });
+
+
+
 
 
 

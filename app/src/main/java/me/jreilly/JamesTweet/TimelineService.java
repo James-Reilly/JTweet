@@ -12,11 +12,14 @@ import android.util.Log;
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterAuthConfig;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.models.Tweet;
 import com.twitter.sdk.android.core.services.StatusesService;
 
 import java.util.List;
+
+import io.fabric.sdk.android.Fabric;
 
 /**
  * Created by jreilly on 1/12/15.
@@ -36,9 +39,15 @@ public class TimelineService extends Service {
 
     private String LOG_TAG = "TimelineService";
 
+    private static final String TWITTER_KEY = "u3rtb2wblcZAS4SxsSwx4fcb5";
+    private static final String TWITTER_SECRET = "NoT5fueZXHwRRnka9l0glPyojXtw64z5bnOd0RJlObSEKfkH4H";
+
     @Override
     public void onCreate(){
         super.onCreate();
+        TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
+
+        Fabric.with(this, new Twitter(authConfig));
         tweetHelper = new TweetDataHelper(this);
         tweetDB = tweetHelper.getWritableDatabase();
     }
