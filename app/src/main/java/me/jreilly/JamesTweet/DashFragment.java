@@ -163,6 +163,9 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
             //start the service for updates now
             getActivity().getApplicationContext().startService(
                     new Intent(getActivity().getApplicationContext(), TimelineService.class));
+
+
+
             Log.e(LOG_TAG, "Finished Setup!");
 
         }
@@ -170,8 +173,15 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     }
 
     public void swapToProfile(String uId){
-        getActivity().getSupportFragmentManager().beginTransaction()
-                .replace(R.id.content_frame, ProfileFragment.newInstance(uId)).addToBackStack(null).commit();
+        Intent intent = new Intent(getActivity(), ProfileActivity.class)
+                .putExtra(ProfileActivity.PROFILE_KEY, uId);
+        startActivity(intent);
+    }
+
+    public void swapToTweet(long tweetId){
+        Intent intent = new Intent(getActivity(), TweetActivity.class)
+                .putExtra(TweetActivity.TWEET_KEY, tweetId);
+        startActivity(intent);
     }
 
     @Override
@@ -267,7 +277,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         public void run() {
 
             Log.e(LOG_TAG, "Getting Tweets Extending!");
-            long numItems = DatabaseUtils.queryNumEntries(mTimelineDB, "home") - 1;
+            final int position = mCursor.getPosition();
             mCursor.moveToLast();
             long tweetId = mCursor.getLong(mCursor.getColumnIndex(BaseColumns._ID));
             final StatusesService service = Twitter.getApiClient().getStatusesService();
@@ -276,6 +286,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
                 @Override
                 public void success(Result<List<Tweet>> listResult) {
                     boolean statusChanges = false;
+                    long numEntries = DatabaseUtils.queryNumEntries(mTimelineDB, "home");
                     List<Tweet> list = listResult.data.subList(0,listResult.data.size());
 
                         for (Tweet t : list) {
@@ -290,6 +301,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
 
                     if (statusChanges){
                         int rowLimit = mMaxItems;
+
                         if(DatabaseUtils.queryNumEntries(mTimelineDB, "home") > rowLimit) {
                             String deleteQuery = "DELETE FROM home WHERE "+BaseColumns._ID+" NOT IN " +
                                     "(SELECT "+BaseColumns._ID+" FROM home ORDER BY "+"update_time DESC " +
@@ -302,6 +314,8 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
                         mRecyclerView.setAdapter(mTweetAdapter);
 
                     }
+                    mRecyclerView.scrollToPosition(position);
+
 
 
 
@@ -356,5 +370,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
 
 
     }
+
+
 
 }

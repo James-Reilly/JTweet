@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.graphics.Point;
@@ -62,14 +63,15 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
     private ProfileSwitch mActivity;
 
 
+
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView mTweet;
         public TextView mUser;
         public ImageButton mImage;
         public ImageButton mProfileImage;
-        public ImageButton mReplyButton;
-        public ImageButton mRetweetButton;
-        public ImageButton mFavoriteButton;
+        public View mClickable;
+
 
         public View mlayout;
         public ViewHolder(View list_item){
@@ -78,9 +80,8 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
             mTweet = (TextView) list_item.findViewById(R.id.my_text);
             mImage = (ImageButton) list_item.findViewById(R.id.my_picture);
             mProfileImage = (ImageButton) list_item.findViewById(R.id.user_image);
-            mReplyButton = (ImageButton) list_item.findViewById(R.id.my_reply_button);
-            mRetweetButton = (ImageButton) list_item.findViewById(R.id.my_retweet_button);
-            mFavoriteButton = (ImageButton) list_item.findViewById(R.id.my_favorite_button);
+            mClickable = list_item.findViewById(R.id.my_clickable);
+
 
         }
     }
@@ -98,11 +99,7 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
         View v = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.text_layout, viewGroup, false);
 
-
-
-
-        ViewHolder vh = new ViewHolder(v);
-        return vh;
+        return new ViewHolder(v);
     }
 
     @Override
@@ -184,56 +181,22 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
             viewHolder.mTweet.setMovementMethod(LinkMovementMethod.getInstance());
             viewHolder.mTweet.setText(tweetContent);
 
-            viewHolder.mReplyButton.setOnClickListener( new View.OnClickListener() {
-
+           View.OnClickListener detailTweet =  new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(viewHolder.mReplyButton.getContext(), "REPLY!",
-                            Toast.LENGTH_SHORT).show();
-
-                }
-            });
-
-            viewHolder.mFavoriteButton.setOnClickListener( new View.OnClickListener() {
-
-                @Override
-                public void onClick(View v) {
-                    Toast.makeText(viewHolder.mFavoriteButton.getContext(), "FAVORITE!",
-                            Toast.LENGTH_SHORT).show();
-
-                }
-            });
-
-            viewHolder.mRetweetButton.setOnClickListener( new View.OnClickListener() {
-
-                @Override
-                public void onClick(View v) {
-                    if (!mCursor.moveToPosition(i)) {
+                    if(!mCursor.moveToPosition(i)){
                         Log.e("TweetAdapter", "Illegal State Exception!");
 
                     } else {
-                        final long tweetId = mCursor.getLong(mCursor.getColumnIndex(BaseColumns._ID));
-                        TwitterCore.getInstance().getApiClient().getStatusesService().retweet(tweetId, null, new Callback<Tweet>() {
-
-
-                            @Override
-                            public void success(Result result) {
-                                Toast.makeText(viewHolder.mRetweetButton.getContext(), "RETWEET!",
-                                        Toast.LENGTH_SHORT).show();
-                            }
-
-                            @Override
-                            public void failure(TwitterException e) {
-
-                            }
-                        });
+                        long tweetId = mCursor.getLong(mCursor.getColumnIndex(BaseColumns._ID));
+                        mActivity.swapToTweet(tweetId);
                     }
+
+
                 }
-            });
-
-
-
-
+            };
+            viewHolder.mTweet.setOnClickListener( detailTweet );
+            viewHolder.mUser.setOnClickListener( detailTweet );
 
 
         }

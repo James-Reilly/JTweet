@@ -1,4 +1,4 @@
-package me.jreilly.JamesTweet;
+package me.jreilly.JamesTweet.Etc;
 
 import android.app.Application;
 import android.content.Context;

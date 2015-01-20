@@ -20,6 +20,7 @@ import com.twitter.sdk.android.core.services.StatusesService;
 import java.util.List;
 
 import io.fabric.sdk.android.Fabric;
+import me.jreilly.JamesTweet.TweetDataHelper;
 
 /**
  * Created by jreilly on 1/12/15.

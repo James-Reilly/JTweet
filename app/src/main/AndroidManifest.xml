@@ -5,15 +5,18 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".Etc.TweetTweet"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:name="me.jreilly.JamesTweet.TweetTweet"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="me.jreilly.JamesTweet.DashActivity"
+            android:name=".DashActivity"
             android:label="@string/app_name" >
-
+        </activity>
+        <activity
+            android:name=".ProfileActivity"
+            android:label="@string/app_name" >
         </activity>
 
         <meta-data
@@ -21,16 +24,21 @@
             android:value="9223035ce240f9ecc0ba6de792ad7def453bccf7" />
 
         <activity
-            android:name="me.jreilly.JamesTweet.LoginActivity"
-            android:label="@string/app_name"
-            >
+            android:name=".LoginActivity"
+            android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".TimelineService"/>
+
+        <service android:name=".TimelineService" />
+
+        <activity
+            android:name=".TweetActivity"
+            android:label="@string/title_activity_tweet" >
+        </activity>
     </application>
 
 </manifest>

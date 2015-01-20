@@ -1,6 +1,7 @@
 package me.jreilly.JamesTweet;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -74,10 +75,12 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mUserId = getArguments().getString(ARG_PARAM1);
+        Intent intent = getActivity().getIntent();
+        if (intent != null && intent.hasExtra(ProfileActivity.PROFILE_KEY)){
+            mUserId = intent.getStringExtra(ProfileActivity.PROFILE_KEY);
 
         }
+
     }
 
     @Override
@@ -131,6 +134,12 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
     public void swapToProfile(String uId){
         getActivity().getSupportFragmentManager().beginTransaction()
                 .replace(R.id.content_frame, ProfileFragment.newInstance(uId)).addToBackStack(null).commit();
+    }
+
+    public void swapToTweet(long tweetId){
+        Intent intent = new Intent(getActivity(), TweetActivity.class)
+                .putExtra(TweetActivity.TWEET_KEY, tweetId);
+        startActivity(intent);
     }
 
 

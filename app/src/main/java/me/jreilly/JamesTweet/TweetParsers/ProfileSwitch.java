@@ -6,4 +6,5 @@ package me.jreilly.JamesTweet.TweetParsers;
 
 public interface ProfileSwitch {
     public void swapToProfile(String uId);
+    public void swapToTweet(long tId);
 }

@@ -1,5 +1,7 @@
 package me.jreilly.JamesTweet;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -28,6 +30,8 @@ public class DashActivity extends ActionBarActivity{
     RecyclerView.LayoutManager mLayoutManager;
     DrawerLayout mDrawer;
 
+    Activity mActivity;
+
     ActionBarDrawerToggle mDrawerToggle;
 
     /*String Array of the navigation drawer items */
@@ -52,7 +56,7 @@ public class DashActivity extends ActionBarActivity{
         mDrawerView.setHasFixedSize(true);
 
         mAdapter = new NavAdapter(navItems);
-
+        mActivity = this;
         mDrawerView.setAdapter(mAdapter);
 
         //Detect swipe to open navigation drawer
@@ -70,14 +74,17 @@ public class DashActivity extends ActionBarActivity{
                 View child = rv.findChildViewUnder(e.getX(),e.getY());
 
                 if (child != null && mGestureDetector.onTouchEvent(e)){
-                    mDrawer.closeDrawers();
+
                     if(navItems[rv.getChildPosition(child)].equals("Profile")){
                         //Get Screen name of User
                         String uId = Twitter.getSessionManager().getActiveSession().getUserName();
                         //
-                        getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.content_frame, ProfileFragment.newInstance(uId)).addToBackStack(null).commit();
+
+                        Intent intent = new Intent(mActivity, ProfileActivity.class)
+                                .putExtra(ProfileActivity.PROFILE_KEY, uId);
+                        startActivity(intent);
                     } else if (navItems[rv.getChildPosition(child)].equals("Timeline")){
+                        mDrawer.closeDrawers();
                         getSupportFragmentManager().beginTransaction()
                                 .replace(R.id.content_frame, new DashFragment()).commit();
                     }
