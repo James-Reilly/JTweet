@@ -34,6 +34,8 @@ import com.twitter.sdk.android.tweetui.LoadCallback;
 import com.twitter.sdk.android.tweetui.TweetUtils;
 import com.twitter.sdk.android.tweetui.TweetView;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -71,6 +73,7 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
         public ImageButton mImage;
         public ImageButton mProfileImage;
         public View mClickable;
+        public TextView mRetweeted;
 
 
         public View mlayout;
@@ -81,6 +84,7 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
             mImage = (ImageButton) list_item.findViewById(R.id.my_picture);
             mProfileImage = (ImageButton) list_item.findViewById(R.id.user_image);
             mClickable = list_item.findViewById(R.id.my_clickable);
+            mRetweeted = (TextView) list_item.findViewById(R.id.my_retweeted);
 
 
         }
@@ -158,11 +162,16 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
             String createdAt = mCursor.getString(mCursor.getColumnIndex("update_time"));
             String retweetText = "";
             if (mCursor.getInt(mCursor.getColumnIndex("update_retweeted")) == 1){
-                retweetText = "Retweeted by ";
+                viewHolder.mRetweeted.setVisibility(View.VISIBLE);
+                retweetText = "Retweeted by @";
                 retweetText += mCursor.getString(mCursor.getColumnIndex("update_original"));
+                viewHolder.mRetweeted.setText(retweetText);
+            }else {
+                viewHolder.mRetweeted.setText(null);
+                viewHolder.mRetweeted.setVisibility(View.GONE);
             }
-            viewHolder.mUser.setText(mCursor.getString(mCursor.getColumnIndex("user_screen"))
-                    + retweetText);
+            viewHolder.mUser.setText(mCursor.getString(mCursor.getColumnIndex("user_name"))
+                    + " - @" + mCursor.getString(mCursor.getColumnIndex("user_screen")));
             String tweetText = mCursor.getString(mCursor.getColumnIndex("update_text"));
 
             ArrayList<int[]> hashtagSpans = getSpans(tweetText, '#');

@@ -53,6 +53,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     private TweetDataHelper mHelper;
     private SQLiteDatabase mTimelineDB;
     private Cursor mCursor;
+    private Cursor mCursorAdapter;
     private TweetAdapter mTweetAdapter;
     private BroadcastReceiver mTweetReciever;
 
@@ -60,6 +61,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     /*Variables for updating the timeline */
     private TimelineUpdater mTimelineUpdater;
     private TimelineExtender mTimelineExtender;
+    private Callback<List<Tweet>> mCallBack;
 
 
     /*Variables for the adapter */
@@ -230,14 +232,16 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
                 @Override
                 public void success(Result<List<Tweet>> listResult) {
                     boolean statusChanges = false;
-                    try {
+
                         for (Tweet t : listResult.data) {
+                            try {
                             ContentValues tweetValues = mHelper.getValues(t);
                             mTimelineDB.insertOrThrow("home", null, tweetValues);
                             statusChanges = true;
 
-                        }
-                    }catch (Exception te) { Log.e(LOG_TAG, "Exception: " + te);
+
+                        } catch (Exception te) { Log.e(LOG_TAG, "Exception: " + te);
+                            }
                     }
 
                     if (statusChanges){
@@ -285,7 +289,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
             service.homeTimeline(50, null, tweetId, null, null, null, true, new Callback<List<Tweet>>() {
                 @Override
                 public void success(Result<List<Tweet>> listResult) {
-                    boolean statusChanges = false;
+
                     long numEntries = DatabaseUtils.queryNumEntries(mTimelineDB, "home");
                     List<Tweet> list = listResult.data.subList(0,listResult.data.size());
 
@@ -293,13 +297,13 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
                             try {
                                 ContentValues tweetValues = mHelper.getValues(t);
                                 mTimelineDB.insertOrThrow("home", null, tweetValues);
-                                statusChanges = true;
+
                             }catch (Exception te) { Log.e(LOG_TAG, "Exception: " + te);}
 
                         }
 
 
-                    if (statusChanges){
+
                         int rowLimit = mMaxItems;
 
                         if(DatabaseUtils.queryNumEntries(mTimelineDB, "home") > rowLimit) {
@@ -313,7 +317,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
                         mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration, mFragment);
                         mRecyclerView.setAdapter(mTweetAdapter);
 
-                    }
+
                     mRecyclerView.scrollToPosition(position);
 
 

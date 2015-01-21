@@ -1,6 +1,7 @@
 package me.jreilly.JamesTweet;
 
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.provider.BaseColumns;
 import android.support.v7.widget.RecyclerView;
@@ -148,13 +149,56 @@ public class TweetFragment extends android.support.v4.app.Fragment  {
 
                     }
                 });
+                if(t.favorited){
+                    mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_star_grey600_24dp));
+                } else {
+                    mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_star_outline_grey600_24dp));
+                }
 
                 mFavoriteButton.setOnClickListener( new View.OnClickListener() {
 
                     @Override
                     public void onClick(View v) {
-                        Toast.makeText(mFavoriteButton.getContext(), "FAVORITE!",
-                                Toast.LENGTH_SHORT).show();
+
+
+                        if(t.favorited){
+                            TwitterCore.getInstance().getApiClient().getFavoriteService().destroy(mTweetId, null,new Callback<Tweet>() {
+
+
+                                @Override
+                                public void success(Result result) {
+                                    Toast.makeText(mFavoriteButton.getContext(), "FAVORITE!",
+                                            Toast.LENGTH_SHORT).show();
+                                    mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_star_outline_grey600_24dp));
+                                }
+
+                                @Override
+                                public void failure(TwitterException e) {
+
+                                }
+                            });
+
+                        }else {
+                            TwitterCore.getInstance().getApiClient().getFavoriteService().create(mTweetId, null,new Callback<Tweet>() {
+
+
+                                @Override
+                                public void success(Result result) {
+                                    Toast.makeText(mFavoriteButton.getContext(), "FAVORITE!",
+                                            Toast.LENGTH_SHORT).show();
+                                    mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_star_grey600_24dp));
+                                }
+
+                                @Override
+                                public void failure(TwitterException e) {
+                                    Toast.makeText(mFavoriteButton.getContext(), "Exception " + e,
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
+                        }
+
+
 
                     }
                 });
@@ -163,22 +207,30 @@ public class TweetFragment extends android.support.v4.app.Fragment  {
 
                     @Override
                     public void onClick(View v) {
+                        if(t.retweeted){
+                            Toast.makeText(mRetweetButton.getContext(), "ALREADY RETWEETED!",
+                                    Toast.LENGTH_SHORT).show();
 
+                        } else {
                             TwitterCore.getInstance().getApiClient().getStatusesService().retweet(
                                     mTweetId, null, new Callback<Tweet>() {
 
 
-                                @Override
-                                public void success(Result result) {
-                                    Toast.makeText(mRetweetButton.getContext(), "RETWEET!",
-                                            Toast.LENGTH_SHORT).show();
-                                }
+                                        @Override
+                                        public void success(Result result) {
+                                            Toast.makeText(mRetweetButton.getContext(), "RETWEET!",
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
 
-                                @Override
-                                public void failure(TwitterException e) {
+                                        @Override
+                                        public void failure(TwitterException e) {
 
-                                }
-                            });
+                                        }
+                                    });
+
+                        }
+
+
                         }
 
                 });
