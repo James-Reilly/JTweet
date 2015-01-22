@@ -18,9 +18,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -64,6 +67,8 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
 
     private ProfileSwitch mActivity;
 
+    private int lastPosition  = -1;
+
 
 
 
@@ -72,8 +77,9 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
         public TextView mUser;
         public ImageButton mImage;
         public ImageButton mProfileImage;
-        public View mClickable;
+        public LinearLayout mContainer;
         public TextView mRetweeted;
+
 
 
         public View mlayout;
@@ -83,7 +89,7 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
             mTweet = (TextView) list_item.findViewById(R.id.my_text);
             mImage = (ImageButton) list_item.findViewById(R.id.my_picture);
             mProfileImage = (ImageButton) list_item.findViewById(R.id.user_image);
-            mClickable = list_item.findViewById(R.id.my_clickable);
+            mContainer = (LinearLayout) list_item.findViewById(R.id.item_layout_container);
             mRetweeted = (TextView) list_item.findViewById(R.id.my_retweeted);
 
 
@@ -206,6 +212,8 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
             };
             viewHolder.mTweet.setOnClickListener( detailTweet );
             viewHolder.mUser.setOnClickListener( detailTweet );
+
+            setAnimation(viewHolder.mContainer, i);
 
 
         }
@@ -375,6 +383,16 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
                 mCurrentAnimator = set;
             }
         });
+    }
+    private void setAnimation(View viewToAnimate, int position)
+    {
+        // If the bound view wasn't previously displayed on screen, it's animated
+        if (position > lastPosition)
+        {
+            Animation animation = AnimationUtils.loadAnimation(viewToAnimate.getContext(), android.R.anim.slide_in_left);
+            viewToAnimate.startAnimation(animation);
+            lastPosition = position;
+        }
     }
 
 

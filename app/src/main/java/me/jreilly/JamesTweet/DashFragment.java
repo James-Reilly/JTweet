@@ -16,10 +16,16 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
+import android.widget.Toast;
 
+import com.melnykov.fab.FloatingActionButton;
+import com.melnykov.fab.ScrollDirectionListener;
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
@@ -46,6 +52,11 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
 
     private final String LOG_TAG = "DashFragment";
     private int mMaxItems = 600;
+
+    private FloatingActionButton mFab;
+
+    private PopupWindow popUp;
+    private LinearLayout mainLayout;
 
 
 
@@ -76,7 +87,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         //Inflate the Recyclerview
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_timeline);
@@ -109,6 +120,20 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         //Initialize the layout to a LinearLayout
         mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
+
+        popUp = new PopupWindow(getActivity());
+
+        mFab = (FloatingActionButton) rootView.findViewById(R.id.fab);
+        mFab.attachToRecyclerView(mRecyclerView);
+        mFab.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), ComposeActivity.class);
+
+                startActivity(intent);
+            }
+        });
 
         //Sets up the timeline with a DB and a cursor
         //It also sets up the service

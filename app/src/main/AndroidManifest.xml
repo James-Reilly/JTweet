@@ -39,6 +39,15 @@
             android:name=".TweetActivity"
             android:label="@string/title_activity_tweet" >
         </activity>
+        <activity
+            android:name=".ComposeActivity"
+            android:label="@string/title_activity_compose"
+            android:theme="@style/Theme.FloatingWindow.Popup"
+            android:configChanges="orientation|screenSize"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden"
+            android:clearTaskOnLaunch="true"
+            android:exported="true">
+        </activity>
     </application>
 
 </manifest>
