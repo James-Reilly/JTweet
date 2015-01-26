@@ -51,7 +51,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
     private final String LOG_TAG = "DashFragment";
-    private int mMaxItems = 600;
+    private int mMaxItems = 100;
 
     private FloatingActionButton mFab;
 
@@ -130,10 +130,11 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getActivity(), ComposeActivity.class);
-
+                mFab.hide();
                 startActivity(intent);
             }
         });
+
 
         //Sets up the timeline with a DB and a cursor
         //It also sets up the service
@@ -142,6 +143,8 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         //Allows endless scrolling (theoretically)
         mRecyclerView.setOnScrollListener(
                 new EndlessRecyclerOnScrollListener((LinearLayoutManager)mLayoutManager) {
+
+
                   @Override
                   public void onLoadMore() {
 
@@ -237,6 +240,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
                         "(SELECT "+BaseColumns._ID+" FROM home ORDER BY "+"update_time DESC " +
                         "limit "+rowLimit+")";
                 mTimelineDB.execSQL(deleteQuery);
+                Log.v(LOG_TAG, "Deleteing Tweets!");
             }
             mCursor = mTimelineDB.query("home", null, null, null, null, null, "update_time DESC");
             getActivity().startManagingCursor(mCursor);
@@ -269,20 +273,21 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
                             }
                     }
 
-                    if (statusChanges){
-                        int rowLimit = mMaxItems;
-                        if(DatabaseUtils.queryNumEntries(mTimelineDB, "home") > rowLimit) {
-                            String deleteQuery = "DELETE FROM home WHERE "+BaseColumns._ID+" NOT IN " +
-                                    "(SELECT "+BaseColumns._ID+" FROM home ORDER BY "+"update_time DESC " +
-                                    "limit "+rowLimit+")";
-                            mTimelineDB.execSQL(deleteQuery);
-                        }
-                        mCursor = mTimelineDB.query("home", null, null, null, null, null, "update_time DESC");
-                        getActivity().startManagingCursor(mCursor);
-                        mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration, mFragment);
-                        mRecyclerView.setAdapter(mTweetAdapter);
 
+                    int rowLimit = mMaxItems;
+                    if(DatabaseUtils.queryNumEntries(mTimelineDB, "home") > rowLimit) {
+                        String deleteQuery = "DELETE FROM home WHERE "+BaseColumns._ID+" NOT IN " +
+                                "(SELECT "+BaseColumns._ID+" FROM home ORDER BY "+"update_time DESC " +
+                                "limit "+rowLimit+")";
+                        mTimelineDB.execSQL(deleteQuery);
+                        Log.v(LOG_TAG, "Deleteing Tweets!");
                     }
+                    mCursor = mTimelineDB.query("home", null, null, null, null, null, "update_time DESC");
+                    getActivity().startManagingCursor(mCursor);
+                    mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration, mFragment);
+                    mRecyclerView.setAdapter(mTweetAdapter);
+
+
                     mSwipeRefreshLayout.setRefreshing(false);
 
 
@@ -336,6 +341,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
                                     "(SELECT "+BaseColumns._ID+" FROM home ORDER BY "+"update_time DESC " +
                                     "limit "+rowLimit+")";
                             mTimelineDB.execSQL(deleteQuery);
+                            Log.v(LOG_TAG, "Deleteing Tweets!");
                         }
                         mCursor = mTimelineDB.query("home", null, null, null, null, null, "update_time DESC");
                         getActivity().startManagingCursor(mCursor);
@@ -373,8 +379,15 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
             this.mLinearLayoutManager = linearLayoutManager;
         }
 
+
+
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy){
+            if( dy > 0) {
+                mFab.hide();
+            } else {
+                mFab.show();
+            }
             super.onScrolled(recyclerView,dx,dy);
 
             visibleItemCount = recyclerView.getChildCount();

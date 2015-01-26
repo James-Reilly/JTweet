@@ -67,7 +67,7 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
 
     private ProfileSwitch mActivity;
 
-    private int lastPosition  = -1;
+    private int lastPosition  = 5;
 
 
 

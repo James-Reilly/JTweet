@@ -5,7 +5,8 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:orientation="vertical"
-    tools:context="me.jreilly.JamesTweet.ComposeActivity">
+    tools:context="me.jreilly.JamesTweet.ComposeActivity"
+    android:elevation="0dp">
 
     <EditText
         android:layout_width="match_parent"
@@ -16,17 +17,20 @@
         android:id="@+id/tweetEditText"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        />
+        android:elegantTextHeight="false"
+        android:elevation="-10dp" />
 
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/composeButton"
 
+
         android:layout_alignParentRight="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginTop="63dp"
-        android:src="@drawable/ic_reply_black_36dp"/>
+        android:background="@null"
+        android:src="@drawable/ic_reply_black_36dp"
+        android:layout_gravity="right"
+        android:layout_marginRight="25dp" />
 
 
 </LinearLayout>

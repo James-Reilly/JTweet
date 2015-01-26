@@ -30,6 +30,8 @@ public class ComposeActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setUpWindow();
+        getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
+        getActionBar().hide();
         setContentView(R.layout.activity_compose);
         final Context context = this;
 
@@ -90,7 +92,7 @@ public class ComposeActivity extends Activity {
         // You can easily set the alpha and the dim behind the window from here
         WindowManager.LayoutParams params = getWindow().getAttributes();
         params.alpha = 1.0f;    // lower than one makes it more transparent
-        params.dimAmount = 0f;  // set it higher if you want to dim behind the window
+        params.dimAmount = 0.5f;  // set it higher if you want to dim behind the window
         getWindow().setAttributes(params);
 
         // Gets the display size so that you can set the window to a percent of that
@@ -99,6 +101,7 @@ public class ComposeActivity extends Activity {
         display.getSize(size);
         int width = size.x;
         int height = size.y;
+
 
         // You could also easily used an integer value from the shared preferences to set the percent
         if (height > width) {

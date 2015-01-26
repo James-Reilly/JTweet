@@ -53,7 +53,7 @@ public class TweetDataHelper extends SQLiteOpenHelper {
 
     //Database creation string
     private static final String DATABASE_CREATE = "CREATE TABLE home (" + HOME_COL +
-            " INTEGER PRIMARY KEY AUTOINCREMENT, " + UPDATE_COL + " TEXT, " + NAME_COL + " Text, "
+            " INTEGER NOT NULL PRIMARY KEY, " + UPDATE_COL + " TEXT, " + NAME_COL + " Text, "
             + USER_COL + " TEXT, " + TIME_COL + " INTEGER, " + USER_IMG + " TEXT, " + MEDIA_COL +
             " TEXT, " + FAVORITE_COL + " INTEGER, " + RETWEET_COL  + " INTEGER, " + RETWEETED_COL +
             " INTEGER, " + ORIGINAL_COL + " TEXT);";
@@ -62,7 +62,7 @@ public class TweetDataHelper extends SQLiteOpenHelper {
     TweetDataHelper(Context context){
 
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        Log.e("TweetDataHelper", "Creating DB!");
+
     }
 
 
@@ -71,7 +71,7 @@ public class TweetDataHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        Log.e("TweetDataHelper", "Creating DB!");
+
         db.execSQL(DATABASE_CREATE);
     }
 

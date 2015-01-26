@@ -132,8 +132,10 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
     }
 
     public void swapToProfile(String uId){
-        getActivity().getSupportFragmentManager().beginTransaction()
-                .replace(R.id.content_frame, ProfileFragment.newInstance(uId)).addToBackStack(null).commit();
+        Intent intent = new Intent(getActivity(), ProfileActivity.class)
+                .putExtra(ProfileActivity.PROFILE_KEY, uId);
+        startActivity(intent);
+        getActivity().finish();
     }
 
     public void swapToTweet(long tweetId){
