@@ -1,10 +1,7 @@
 package me.jreilly.JamesTweet;
 
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.provider.BaseColumns;
-import android.support.v7.widget.RecyclerView;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
@@ -24,7 +21,6 @@ import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.models.Tweet;
 
 import java.util.ArrayList;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -85,10 +81,15 @@ public class TweetFragment extends android.support.v4.app.Fragment  {
     }
 
     public void setUpTweetLayout(){
-        Twitter.getApiClient().getStatusesService().show(mTweetId, null, null, true, new Callback<Tweet>() {
+        Twitter.getApiClient().getStatusesService().show(mTweetId, null, true, true, new Callback<Tweet>() {
             @Override
             public void success(Result<Tweet> tweetResult) {
                 final Tweet t = tweetResult.data;
+                if(t.retweeted){
+
+
+                }
+
                 mUser.setText(t.user.name + " - @" +
                         t.user.screenName);
         /*
@@ -112,7 +113,7 @@ public class TweetFragment extends android.support.v4.app.Fragment  {
                 if (t.entities != null && (t.entities.media != null)){
 
                     Picasso.with(mProfileImage.getContext()).load(
-                            t.entities.media.get(0).mediaUrl).fit() .into(
+                            t.entities.media.get(0).mediaUrl).fit().into(
                             mImage
                     );
 
@@ -126,7 +127,7 @@ public class TweetFragment extends android.support.v4.app.Fragment  {
                 ArrayList<int[]> hashtagSpans = getSpans(tweetText, '#');
                 ArrayList<int[]> profileSpans = getSpans(tweetText, '@');
 
-                SpannableString tweetContent = new SpannableString(tweetText);
+                final SpannableString tweetContent = new SpannableString(tweetText);
 
                 for( int j = 0; j < profileSpans.size(); j ++){
                     int[] span = profileSpans.get(j);
@@ -162,6 +163,8 @@ public class TweetFragment extends android.support.v4.app.Fragment  {
 
 
                         if(t.favorited){
+
+
                             TwitterCore.getInstance().getApiClient().getFavoriteService().destroy(mTweetId, null,new Callback<Tweet>() {
 
 
@@ -186,7 +189,7 @@ public class TweetFragment extends android.support.v4.app.Fragment  {
                                 public void success(Result result) {
                                     Toast.makeText(mFavoriteButton.getContext(), "FAVORITE!",
                                             Toast.LENGTH_SHORT).show();
-                                    mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_star_grey600_24dp));
+                                    mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_toggle_star_selected));
                                 }
 
                                 @Override
@@ -203,32 +206,73 @@ public class TweetFragment extends android.support.v4.app.Fragment  {
                     }
                 });
 
+                if(t.retweeted){
+                    mRetweetButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_action_cached_selected));
+                }else {
+                    mRetweetButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_cached_grey600_24dp));
+                }
+
                 mRetweetButton.setOnClickListener( new View.OnClickListener() {
 
                     @Override
                     public void onClick(View v) {
-                        if(t.retweeted){
-                            Toast.makeText(mRetweetButton.getContext(), "ALREADY RETWEETED!",
-                                    Toast.LENGTH_SHORT).show();
+                        Twitter.getApiClient().getStatusesService().show(mTweetId, null, true, true, new Callback<Tweet>() {
+                            @Override
+                            public void success(Result<Tweet> tweetResult) {
+                                Tweet t = tweetResult.data;
+                                if(t.retweeted){
+                                    Log.v(LOG_TAG, t.currentUserRetweet.toString());
+                                    String retweetId  = t.currentUserRetweet.toString();
+                                    int id = retweetId.indexOf("id_str=") + 7;
+                                    String id2 = retweetId.substring(id, retweetId.length() - 1);
+                                    Log.v(LOG_TAG, id2);
+                                    long rtId = Long.valueOf(id2);
 
-                        } else {
-                            TwitterCore.getInstance().getApiClient().getStatusesService().retweet(
-                                    mTweetId, null, new Callback<Tweet>() {
 
-
+                                    TwitterCore.getInstance().getApiClient().getStatusesService().destroy(rtId, null, new Callback<Tweet>() {
                                         @Override
-                                        public void success(Result result) {
-                                            Toast.makeText(mRetweetButton.getContext(), "RETWEET!",
+                                        public void success(Result<Tweet> tweetResult) {
+                                            Toast.makeText(mRetweetButton.getContext(), "UN-RETWEETED!",
                                                     Toast.LENGTH_SHORT).show();
+                                            mRetweetButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_cached_grey600_24dp));
+
                                         }
 
                                         @Override
                                         public void failure(TwitterException e) {
-
+                                            Log.e("TweetFragment", "Exception: " + e);
                                         }
                                     });
 
-                        }
+                                } else {
+                                    TwitterCore.getInstance().getApiClient().getStatusesService().retweet(
+                                            mTweetId, null, new Callback<Tweet>() {
+
+
+                                                @Override
+                                                public void success(Result result) {
+                                                    Toast.makeText(mRetweetButton.getContext(), "RETWEET!",
+                                                            Toast.LENGTH_SHORT).show();
+                                                    mRetweetButton.setImageDrawable(getResources()
+                                                            .getDrawable(
+                                                                    R.drawable.ic_action_cached_selected));
+                                                }
+
+                                                @Override
+                                                public void failure(TwitterException e) {
+
+                                                }
+                                            });
+
+                                }
+                            }
+
+                            @Override
+                            public void failure(TwitterException e) {
+
+                            }
+                        });
+
 
 
                         }
