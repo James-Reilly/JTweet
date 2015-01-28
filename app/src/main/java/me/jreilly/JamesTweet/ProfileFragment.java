@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.melnykov.fab.FloatingActionButton;
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
@@ -94,7 +95,11 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
         fragView = rootView;
         mFragment = this;
         mShortAnimationDuration = getResources().getInteger(
+
                 android.R.integer.config_shortAnimTime);
+
+        FloatingActionButton mFab = (FloatingActionButton) rootView.findViewById(R.id.fab);
+        mFab.hide();
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.fragment_main_swipe_refresh_layout);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {

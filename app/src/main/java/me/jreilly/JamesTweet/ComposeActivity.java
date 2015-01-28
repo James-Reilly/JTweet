@@ -2,8 +2,8 @@ package me.jreilly.JamesTweet;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Point;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.Menu;
@@ -13,7 +13,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.twitter.sdk.android.Twitter;
@@ -22,9 +21,14 @@ import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.models.Tweet;
 
-import me.jreilly.JamesTweet.R;
-
 public class ComposeActivity extends Activity {
+
+    public static final String REPLY_USER = "reply_user";
+    public static final String REPLY_ID = "reply_id";
+
+    private long mReplyId;
+    private String mReplyUser = "";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,17 +36,25 @@ public class ComposeActivity extends Activity {
         setUpWindow();
         getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
         getActionBar().hide();
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra(REPLY_USER) && intent.hasExtra(REPLY_ID)){
+            mReplyUser = intent.getStringExtra(REPLY_USER);
+            mReplyId = intent.getLongExtra(REPLY_ID, 0);
+
+        }
         setContentView(R.layout.activity_compose);
+
         final Context context = this;
 
         final EditText tweetText = (EditText) findViewById(R.id.tweetEditText);
+        tweetText.setText(mReplyUser);
         ImageButton createTweet = (ImageButton) findViewById(R.id.composeButton);
 
         createTweet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String text = tweetText.getText().toString();
-                Twitter.getApiClient().getStatusesService().update(text, null, null, null, null, null, null, null, new Callback<Tweet>() {
+                Twitter.getApiClient().getStatusesService().update(text, mReplyId, null, null, null, null, null, null, new Callback<Tweet>() {
                     @Override
                     public void success(Result<Tweet> tweetResult) {
                         Toast.makeText(context, "TWEETED!", Toast.LENGTH_SHORT).show();

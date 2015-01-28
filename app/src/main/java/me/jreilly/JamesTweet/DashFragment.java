@@ -1,6 +1,7 @@
 package me.jreilly.JamesTweet;
 
 
+import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -10,22 +11,18 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.provider.BaseColumns;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.Toast;
 
 import com.melnykov.fab.FloatingActionButton;
-import com.melnykov.fab.ScrollDirectionListener;
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
@@ -124,6 +121,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         popUp = new PopupWindow(getActivity());
 
         mFab = (FloatingActionButton) rootView.findViewById(R.id.fab);
+        mFab.setVisibility(View.VISIBLE);
         mFab.attachToRecyclerView(mRecyclerView);
         mFab.setOnClickListener(new View.OnClickListener() {
 
@@ -205,12 +203,14 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     public void swapToProfile(String uId){
         Intent intent = new Intent(getActivity(), ProfileActivity.class)
                 .putExtra(ProfileActivity.PROFILE_KEY, uId);
+        mFab.hide();
         startActivity(intent);
     }
 
     public void swapToTweet(long tweetId){
         Intent intent = new Intent(getActivity(), TweetActivity.class)
                 .putExtra(TweetActivity.TWEET_KEY, tweetId);
+        mFab.hide();
         startActivity(intent);
     }
 

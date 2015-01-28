@@ -43,6 +43,7 @@ public class TweetFragment extends android.support.v4.app.Fragment  {
 
     private ProfileSwitch mActivity;
 
+
     private final String LOG_TAG = "TweetFragment";
     public TweetFragment() {
 
@@ -141,15 +142,17 @@ public class TweetFragment extends android.support.v4.app.Fragment  {
                 mTweet.setText(tweetContent);
 
 
-                mReplyButton.setOnClickListener( new View.OnClickListener() {
-
+                mReplyButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Toast.makeText(mReplyButton.getContext(), "REPLY!",
-                                Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(getActivity(), ComposeActivity.class)
+                                .putExtra(ComposeActivity.REPLY_ID, mTweetId).putExtra(ComposeActivity.REPLY_USER, "@" + t.user.screenName);
+                        startActivity(intent);
 
                     }
                 });
+
+
                 if(t.favorited){
                     mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_star_grey600_24dp));
                 } else {
@@ -161,48 +164,59 @@ public class TweetFragment extends android.support.v4.app.Fragment  {
                     @Override
                     public void onClick(View v) {
 
+                        Twitter.getApiClient().getStatusesService().show(mTweetId, null, true, true, new Callback<Tweet>() {
+                            @Override
+                            public void success(Result<Tweet> tweetResult) {
+                                Tweet t = tweetResult.data;
+                                if (t.favorited) {
 
-                        if(t.favorited){
+
+                                    TwitterCore.getInstance().getApiClient().getFavoriteService().destroy(mTweetId, null, new Callback<Tweet>() {
 
 
-                            TwitterCore.getInstance().getApiClient().getFavoriteService().destroy(mTweetId, null,new Callback<Tweet>() {
+                                        @Override
+                                        public void success(Result result) {
+
+                                            Toast.makeText(mFavoriteButton.getContext(), "FAVORITE!",
+                                                    Toast.LENGTH_SHORT).show();
+                                            mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_star_outline_grey600_24dp));
+                                        }
+
+                                        @Override
+                                        public void failure(TwitterException e) {
+
+                                        }
+                                    });
+
+                                } else {
+                                    TwitterCore.getInstance().getApiClient().getFavoriteService().create(mTweetId, null, new Callback<Tweet>() {
 
 
-                                @Override
-                                public void success(Result result) {
-                                    Toast.makeText(mFavoriteButton.getContext(), "FAVORITE!",
-                                            Toast.LENGTH_SHORT).show();
-                                    mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_star_outline_grey600_24dp));
+                                        @Override
+                                        public void success(Result result) {
+                                            Toast.makeText(mFavoriteButton.getContext(), "FAVORITE!",
+                                                    Toast.LENGTH_SHORT).show();
+                                            mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_toggle_star_selected));
+                                        }
+
+                                        @Override
+                                        public void failure(TwitterException e) {
+                                            Toast.makeText(mFavoriteButton.getContext(), "Exception " + e,
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+
                                 }
 
-                                @Override
-                                public void failure(TwitterException e) {
+                            }
 
-                                }
-                            });
-
-                        }else {
-                            TwitterCore.getInstance().getApiClient().getFavoriteService().create(mTweetId, null,new Callback<Tweet>() {
+                            @Override
+                            public void failure(TwitterException e) {
+                                Log.e("TweetFragment", "Exception: " + e);
+                            }
 
 
-                                @Override
-                                public void success(Result result) {
-                                    Toast.makeText(mFavoriteButton.getContext(), "FAVORITE!",
-                                            Toast.LENGTH_SHORT).show();
-                                    mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_toggle_star_selected));
-                                }
-
-                                @Override
-                                public void failure(TwitterException e) {
-                                    Toast.makeText(mFavoriteButton.getContext(), "Exception " + e,
-                                            Toast.LENGTH_SHORT).show();
-                                }
-                            });
-
-                        }
-
-
-
+                        });
                     }
                 });
 
@@ -286,6 +300,8 @@ public class TweetFragment extends android.support.v4.app.Fragment  {
                 Log.e(LOG_TAG, "Could not get Tweets : " + e);
             }
         });
+
+
     }
 
     public ArrayList<int[]> getSpans(String body, char prefix) {

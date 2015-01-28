@@ -4,10 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
-import android.content.ContentValues;
-import android.content.DialogInterface;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.provider.BaseColumns;
@@ -25,22 +22,10 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
-import com.twitter.sdk.android.core.Callback;
-import com.twitter.sdk.android.core.Result;
-import com.twitter.sdk.android.core.TwitterCore;
-import com.twitter.sdk.android.core.TwitterException;
-import com.twitter.sdk.android.core.models.Tweet;
-import com.twitter.sdk.android.tweetui.LoadCallback;
-import com.twitter.sdk.android.tweetui.TweetUtils;
-import com.twitter.sdk.android.tweetui.TweetView;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -120,11 +105,13 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
 
         } else {
 
-
+            //Load Profile Image
             Picasso.with(viewHolder.mProfileImage.getContext()).load(mCursor.getString(
                     mCursor.getColumnIndex("user_img"))).into(
                     viewHolder.mProfileImage
             );
+
+            //Set profile image to go to the users profile
             viewHolder.mProfileImage.setOnClickListener( new View.OnClickListener() {
 
                 @Override
@@ -138,8 +125,11 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
                     }
                 }
             });
+
             final String imageUrl = mCursor.getString(mCursor.getColumnIndex("update_media"));
             ViewGroup.LayoutParams params =  viewHolder.mImage.getLayoutParams();
+
+            //Set Cropped Media image and zoomImage animation
             if (!imageUrl.equals("null")){
 
                 viewHolder.mImage.getLayoutParams().height = 400;
@@ -156,6 +146,7 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
                     }
                 });
             } else {
+                //Media is not need so it is hidden.
                 viewHolder.mImage.setImageDrawable(null);
 
                 viewHolder.mImage.getLayoutParams().height = 0;
@@ -167,6 +158,8 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
 
             String createdAt = mCursor.getString(mCursor.getColumnIndex("update_time"));
             String retweetText = "";
+
+            //Set "Retweeted By " Text
             if (mCursor.getInt(mCursor.getColumnIndex("update_retweeted")) == 1){
                 viewHolder.mRetweeted.setVisibility(View.VISIBLE);
                 retweetText = "Retweeted by @";
@@ -176,10 +169,13 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
                 viewHolder.mRetweeted.setText(null);
                 viewHolder.mRetweeted.setVisibility(View.GONE);
             }
+
+            //Set Username Text Field
             viewHolder.mUser.setText(mCursor.getString(mCursor.getColumnIndex("user_name"))
                     + " - @" + mCursor.getString(mCursor.getColumnIndex("user_screen")));
             String tweetText = mCursor.getString(mCursor.getColumnIndex("update_text"));
 
+            //Highlight Profile names/hashtags and their clickable spans
             ArrayList<int[]> hashtagSpans = getSpans(tweetText, '#');
             ArrayList<int[]> profileSpans = getSpans(tweetText, '@');
 

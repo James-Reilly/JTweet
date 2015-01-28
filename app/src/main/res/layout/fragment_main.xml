@@ -30,9 +30,11 @@
         android:layout_gravity="bottom|right"
         android:layout_margin="16dp"
         android:src="@drawable/ic_create_tweet"
+        android:visibility="gone"
         fab:fab_colorNormal="@color/primary"
         fab:fab_colorPressed="@color/primary_pressed"
-        fab:fab_colorRipple="@color/ripple" />
+        fab:fab_colorRipple="@color/ripple"
+        />
 
     <ImageView
         android:id="@+id/expanded_image"

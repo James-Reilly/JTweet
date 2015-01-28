@@ -16,9 +16,12 @@ import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -39,19 +42,31 @@ public class NetTweetAdapter extends RecyclerView.Adapter<NetTweetAdapter.ViewHo
     private int mShortAnimationDuration;
     private View mFragView;
 
+    private int lastPosition  = 5;
+
     private ProfileSwitch mActivity;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView mTweet;
         public TextView mUser;
-        public ImageView mImage;
+        public ImageButton mImage;
         public ImageButton mProfileImage;
-        public ViewHolder(View v){
-            super(v);
-            mUser = (TextView) v.findViewById(R.id.my_user);
-            mTweet = (TextView) v.findViewById(R.id.my_text);
-            mImage = (ImageView) v.findViewById(R.id.my_picture);
-            mProfileImage = (ImageButton) v.findViewById(R.id.user_image);
+        public LinearLayout mContainer;
+        public TextView mRetweeted;
+
+
+
+        public View mlayout;
+        public ViewHolder(View list_item){
+            super(list_item);
+            mUser = (TextView) list_item.findViewById(R.id.my_user);
+            mTweet = (TextView) list_item.findViewById(R.id.my_text);
+            mImage = (ImageButton) list_item.findViewById(R.id.my_picture);
+            mProfileImage = (ImageButton) list_item.findViewById(R.id.user_image);
+            mContainer = (LinearLayout) list_item.findViewById(R.id.item_layout_container);
+            mRetweeted = (TextView) list_item.findViewById(R.id.my_retweeted);
+
+
         }
     }
 
@@ -74,18 +89,61 @@ public class NetTweetAdapter extends RecyclerView.Adapter<NetTweetAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(final NetTweetAdapter.ViewHolder viewHolder, int i) {
+        final Tweet t;
+        String retweetText = "";
+        if (mDataset.get(i).retweeted){
+            //Set "Retweeted By " Text
+            viewHolder.mRetweeted.setVisibility(View.VISIBLE);
+            retweetText = "Retweeted by @";
+            retweetText += mDataset.get(i).user.screenName;
+            viewHolder.mRetweeted.setText(retweetText);
 
-        final Tweet t = mDataset.get(i);
-        viewHolder.mUser.setText(mDataset.get(i).user.name + " - @" +
-                mDataset.get(i).user.screenName);
+            // Set the data to be taken from the retweeted tweet
+            t = mDataset.get(i).retweetedStatus;
+        } else {
+            t = mDataset.get(i);
+            //Not Retweeted so it is not necessary to show
+            viewHolder.mRetweeted.setText(null);
+            viewHolder.mRetweeted.setVisibility(View.GONE);
+        }
+
+        //Set Cropped Media image and zoomImage animation
+        if (t.entities != null && (t.entities.media != null)){
+            final String imageUrl = t.entities.media.get(0).mediaUrl;
+            viewHolder.mImage.getLayoutParams().height = 400;
+            Picasso.with(viewHolder.mImage.getContext()).load(imageUrl).fit().centerCrop().into(
+                    viewHolder.mImage
+            );
+
+            viewHolder.mImage.setOnClickListener( new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    zoomImageFromThumb(viewHolder.mImage, mFragView, imageUrl);
+
+                }
+            });
+
+        } else {
+            //Media is not need so it is hidden.
+            viewHolder.mImage.setImageDrawable(null);
+
+            viewHolder.mImage.getLayoutParams().height = 0;
+        }
+
+
+        viewHolder.mUser.setText(t.user.name + " - @" +
+                t.user.screenName);
         /*
         New MyAdapter Code
          */
 
+        //Load Profile Picture
         Picasso.with(viewHolder.mProfileImage.getContext()).load(t.user.profileImageUrl).into(
                 viewHolder.mProfileImage
         );
 
+        //Set profile image to go to the users profile
         viewHolder.mProfileImage.setOnClickListener( new View.OnClickListener() {
 
             @Override
@@ -118,6 +176,7 @@ public class NetTweetAdapter extends RecyclerView.Adapter<NetTweetAdapter.ViewHo
 
         String tweetText = t.text;
 
+        //Highlight Profile names/hashtags and their clickable spans
         ArrayList<int[]> hashtagSpans = getSpans(tweetText, '#');
         ArrayList<int[]> profileSpans = getSpans(tweetText, '@');
 
@@ -133,6 +192,17 @@ public class NetTweetAdapter extends RecyclerView.Adapter<NetTweetAdapter.ViewHo
         }
         viewHolder.mTweet.setMovementMethod(LinkMovementMethod.getInstance());
         viewHolder.mTweet.setText(tweetContent);
+
+        View.OnClickListener detailTweet =  new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                    mActivity.swapToTweet(t.id);
+            }
+        };
+        viewHolder.mTweet.setOnClickListener( detailTweet );
+        viewHolder.mUser.setOnClickListener( detailTweet );
+
+        setAnimation(viewHolder.mContainer, i);
 
 
 
@@ -302,6 +372,17 @@ public class NetTweetAdapter extends RecyclerView.Adapter<NetTweetAdapter.ViewHo
                 mCurrentAnimator = set;
             }
         });
+    }
+
+    private void setAnimation(View viewToAnimate, int position)
+    {
+        // If the bound view wasn't previously displayed on screen, it's animated
+        if (position > lastPosition)
+        {
+            Animation animation = AnimationUtils.loadAnimation(viewToAnimate.getContext(), android.R.anim.slide_in_left);
+            viewToAnimate.startAnimation(animation);
+            lastPosition = position;
+        }
     }
 
 
