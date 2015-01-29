@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.RecyclerView;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,6 +23,10 @@ import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.models.Tweet;
 
+import java.util.ArrayList;
+
+import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
+
 public class ComposeActivity extends Activity {
 
     public static final String REPLY_USER = "reply_user";
@@ -28,6 +34,10 @@ public class ComposeActivity extends Activity {
 
     private long mReplyId;
     private String mReplyUser = "";
+
+
+
+
 
 
     @Override
@@ -47,7 +57,7 @@ public class ComposeActivity extends Activity {
         final Context context = this;
 
         final EditText tweetText = (EditText) findViewById(R.id.tweetEditText);
-        tweetText.setText(mReplyUser);
+        tweetText.append(mReplyUser);
         ImageButton createTweet = (ImageButton) findViewById(R.id.composeButton);
 
         createTweet.setOnClickListener(new View.OnClickListener() {
@@ -123,4 +133,6 @@ public class ComposeActivity extends Activity {
         }
 
     }
+
+
 }

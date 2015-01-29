@@ -108,28 +108,33 @@ public class NetTweetAdapter extends RecyclerView.Adapter<NetTweetAdapter.ViewHo
         }
 
         //Set Cropped Media image and zoomImage animation
-        if (t.entities != null && (t.entities.media != null)){
-            final String imageUrl = t.entities.media.get(0).mediaUrl;
-            viewHolder.mImage.getLayoutParams().height = 400;
-            Picasso.with(viewHolder.mImage.getContext()).load(imageUrl).fit().centerCrop().into(
-                    viewHolder.mImage
-            );
+        try {
+            if (t.entities != null && (t.entities.media != null)) {
+                final String imageUrl = t.entities.media.get(0).mediaUrl;
+                viewHolder.mImage.getLayoutParams().height = 400;
+                Picasso.with(viewHolder.mImage.getContext()).load(imageUrl).fit().centerCrop().into(
+                        viewHolder.mImage
+                );
 
-            viewHolder.mImage.setOnClickListener( new View.OnClickListener() {
+                viewHolder.mImage.setOnClickListener(new View.OnClickListener() {
 
-                @Override
-                public void onClick(View v) {
-                    zoomImageFromThumb(viewHolder.mImage, mFragView, imageUrl);
+                    @Override
+                    public void onClick(View v) {
+                        zoomImageFromThumb(viewHolder.mImage, mFragView, imageUrl);
 
-                }
-            });
+                    }
+                });
 
-        } else {
-            //Media is not need so it is hidden.
-            viewHolder.mImage.setImageDrawable(null);
+            } else {
+                //Media is not need so it is hidden.
+                viewHolder.mImage.setImageDrawable(null);
 
-            viewHolder.mImage.getLayoutParams().height = 0;
+                viewHolder.mImage.getLayoutParams().height = 0;
+            }
+        }catch (Exception e) {
+
         }
+
 
 
         viewHolder.mUser.setText(t.user.name + " - @" +

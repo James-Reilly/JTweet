@@ -2,6 +2,9 @@ package me.jreilly.JamesTweet;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
@@ -24,13 +27,14 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import me.jreilly.JamesTweet.Adapters.NetTweetAdapter;
 import me.jreilly.JamesTweet.TweetParsers.ProfileLink;
 import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 
 /**
  * Created by jreilly on 1/19/15.
  */
-public class TweetFragment extends android.support.v4.app.Fragment  {
+public class TweetFragment extends android.support.v4.app.Fragment implements ProfileSwitch {
 
     private long mTweetId;
     private TextView mTweet;
@@ -42,6 +46,17 @@ public class TweetFragment extends android.support.v4.app.Fragment  {
     private ImageButton mFavoriteButton;
 
     private ProfileSwitch mActivity;
+
+    private RecyclerView mRecyclerView;
+    private RecyclerView.Adapter mAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
+    private ArrayList<Tweet> mTweetObjects = new ArrayList<>();
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private String[] mDataset;
+
+    private int mShortAnimationDuration;
+    private View fragView;
+    private ProfileSwitch mFragment;
 
 
     private final String LOG_TAG = "TweetFragment";
@@ -76,6 +91,33 @@ public class TweetFragment extends android.support.v4.app.Fragment  {
 
         mActivity = (ProfileSwitch) getActivity();
         setUpTweetLayout();
+
+        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_replies);
+
+        fragView = rootView;
+
+        mFragment = this;
+
+        mShortAnimationDuration = getResources().getInteger(
+
+                android.R.integer.config_shortAnimTime);
+
+        //Variables for Adapter
+
+        mShortAnimationDuration = getResources().getInteger(
+
+                android.R.integer.config_shortAnimTime);
+
+
+        mLayoutManager = new LinearLayoutManager(getActivity());
+
+
+        mRecyclerView.setLayoutManager(mLayoutManager);
+
+        mAdapter = new NetTweetAdapter(mTweetObjects, fragView, mShortAnimationDuration, mFragment );
+        mRecyclerView.setAdapter(mAdapter);
+
+        getReplies(mTweetId, 15, true);
 
 
         return rootView;
@@ -321,5 +363,46 @@ public class TweetFragment extends android.support.v4.app.Fragment  {
         return  spans;
     }
 
+    public void getReplies(long id, final int num_left, final boolean first){
+        Twitter.getApiClient().getStatusesService().show(id, null, true, true, new Callback<Tweet>() {
 
+            @Override
+            public void success(Result<Tweet> tweetResult) {
+                if(!first){
+                    mTweetObjects.add(tweetResult.data);
+
+
+
+                    mRecyclerView.getAdapter().notifyDataSetChanged();
+                    Log.v(LOG_TAG, "Adding: " + tweetResult.data.id);
+                    Log.v(LOG_TAG, "List: " + mTweetObjects.toString());
+                }
+
+                if(tweetResult.data.inReplyToStatusIdStr != null && num_left > 0){
+                    getReplies(tweetResult.data.inReplyToStatusId, num_left - 1, false);
+                    Log.v(LOG_TAG, "Found a reply: " + tweetResult.data.inReplyToStatusId);
+                }
+
+            }
+
+            @Override
+            public void failure(TwitterException e) {
+                   Log.e(LOG_TAG, "Excpetion: " + e);
+            }
+        });
+    }
+
+
+    public void swapToProfile(String uId){
+        Intent intent = new Intent(getActivity(), ProfileActivity.class)
+                .putExtra(ProfileActivity.PROFILE_KEY, uId);
+        startActivity(intent);
+        getActivity().finish();
+    }
+
+    public void swapToTweet(long tweetId){
+        Intent intent = new Intent(getActivity(), TweetActivity.class)
+                .putExtra(TweetActivity.TWEET_KEY, tweetId);
+        startActivity(intent);
+    }
 }
