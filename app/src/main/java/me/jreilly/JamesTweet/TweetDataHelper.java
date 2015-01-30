@@ -5,16 +5,9 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
-import android.text.format.DateFormat;
 import android.util.Log;
 
 import com.twitter.sdk.android.core.models.Tweet;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Locale;
 
 /**
  * Created by jreilly on 1/12/15.
@@ -24,7 +17,9 @@ public class TweetDataHelper extends SQLiteOpenHelper {
     /**db version*/
     private static final int DATABASE_VERSION = 1;
     /**database name*/
-    private static final String DATABASE_NAME = "home.db";
+    public static final String DATABASE_NAME = "home.db";
+
+    public static final String DATABASE_QUEUE_NAME =  "queue.db";
     /**ID column*/
     private static final String HOME_COL = BaseColumns._ID;
     /**tweet text*/
@@ -52,17 +47,19 @@ public class TweetDataHelper extends SQLiteOpenHelper {
 
 
     //Database creation string
-    private static final String DATABASE_CREATE = "CREATE TABLE home (" + HOME_COL +
-            " INTEGER NOT NULL PRIMARY KEY, " + UPDATE_COL + " TEXT, " + NAME_COL + " Text, "
-            + USER_COL + " TEXT, " + TIME_COL + " INTEGER, " + USER_IMG + " TEXT, " + MEDIA_COL +
-            " TEXT, " + FAVORITE_COL + " INTEGER, " + RETWEET_COL  + " INTEGER, " + RETWEETED_COL +
-            " INTEGER, " + ORIGINAL_COL + " TEXT);";
+    private String DATABASE_CREATE;
 
 
-    TweetDataHelper(Context context){
+    TweetDataHelper(Context context, String dbName){
 
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        super(context, dbName, null, DATABASE_VERSION);
+        String mName = dbName.substring(0, dbName.length() - 2);
 
+        DATABASE_CREATE = "CREATE TABLE " + mName + " (" + HOME_COL +
+                " INTEGER NOT NULL PRIMARY KEY, " + UPDATE_COL + " TEXT, " + NAME_COL + " Text, "
+                + USER_COL + " TEXT, " + TIME_COL + " INTEGER, " + USER_IMG + " TEXT, " + MEDIA_COL +
+                " TEXT, " + FAVORITE_COL + " INTEGER, " + RETWEET_COL  + " INTEGER, " + RETWEETED_COL +
+                " INTEGER, " + ORIGINAL_COL + " TEXT);";
     }
 
 

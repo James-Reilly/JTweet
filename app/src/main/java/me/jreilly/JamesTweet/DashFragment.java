@@ -168,7 +168,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
             //get reference to the list view
 
             //instantiate database helper
-            mHelper = new TweetDataHelper(getActivity());
+            mHelper = new TweetDataHelper(getActivity(), TweetDataHelper.DATABASE_NAME);
             //get the database
             mTimelineDB = mHelper.getReadableDatabase();
 

@@ -374,13 +374,12 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
 
 
                     mRecyclerView.getAdapter().notifyDataSetChanged();
-                    Log.v(LOG_TAG, "Adding: " + tweetResult.data.id);
-                    Log.v(LOG_TAG, "List: " + mTweetObjects.toString());
+
                 }
 
                 if(tweetResult.data.inReplyToStatusIdStr != null && num_left > 0){
                     getReplies(tweetResult.data.inReplyToStatusId, num_left - 1, false);
-                    Log.v(LOG_TAG, "Found a reply: " + tweetResult.data.inReplyToStatusId);
+
                 }
 
             }
