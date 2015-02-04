@@ -36,7 +36,7 @@ public class TimelineService extends Service {
     private SharedPreferences tweetPrefs;
     private Handler tweetHandler;
     private static int mins = 5;
-    private static long FETCH_DELAY = mins * (60*1000);
+    private static long FETCH_DELAY =  (60*1000);
 
     private String LOG_TAG = "TimelineService";
 
@@ -49,7 +49,7 @@ public class TimelineService extends Service {
         TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
 
         Fabric.with(this, new Twitter(authConfig));
-        tweetHelper = new TweetDataHelper(this);
+        tweetHelper = new TweetDataHelper(this, TweetDataHelper.DATABASE_NAME);
         tweetDB = tweetHelper.getWritableDatabase();
     }
 
@@ -88,15 +88,16 @@ public class TimelineService extends Service {
                     try {
                         for (Tweet t : listResult.data) {
                             ContentValues tweetValues = tweetHelper.getValues(t);
-                            tweetDB.insertOrThrow("home", null, tweetValues);
+
+                            tweetDB.insertOrThrow("queue", null, tweetValues);
                             statusChanges = true;
 
                         }
                     }catch (Exception te) { Log.e(LOG_TAG, "Exception: " + te);
                     }
-
+                    if(statusChanges){
                         sendBroadcast(new Intent("TWITTER_UPDATES"));
-
+                    }
 
                     tweetHandler.postDelayed(tweetUpdater,FETCH_DELAY);
                 }

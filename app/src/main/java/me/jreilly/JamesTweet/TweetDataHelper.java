@@ -19,7 +19,9 @@ public class TweetDataHelper extends SQLiteOpenHelper {
     /**database name*/
     public static final String DATABASE_NAME = "home.db";
 
-    public static final String DATABASE_QUEUE_NAME =  "queue.db";
+    public static final String TIMELINE_TABLE_NAME = "home";
+
+    public static final String TABLE_QUEUE_NAME =  "queue";
     /**ID column*/
     private static final String HOME_COL = BaseColumns._ID;
     /**tweet text*/
@@ -53,13 +55,9 @@ public class TweetDataHelper extends SQLiteOpenHelper {
     TweetDataHelper(Context context, String dbName){
 
         super(context, dbName, null, DATABASE_VERSION);
-        String mName = dbName.substring(0, dbName.length() - 2);
 
-        DATABASE_CREATE = "CREATE TABLE " + mName + " (" + HOME_COL +
-                " INTEGER NOT NULL PRIMARY KEY, " + UPDATE_COL + " TEXT, " + NAME_COL + " Text, "
-                + USER_COL + " TEXT, " + TIME_COL + " INTEGER, " + USER_IMG + " TEXT, " + MEDIA_COL +
-                " TEXT, " + FAVORITE_COL + " INTEGER, " + RETWEET_COL  + " INTEGER, " + RETWEETED_COL +
-                " INTEGER, " + ORIGINAL_COL + " TEXT);";
+
+
     }
 
 
@@ -68,7 +66,17 @@ public class TweetDataHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
+        DATABASE_CREATE = "CREATE TABLE " + TIMELINE_TABLE_NAME  + " (" + HOME_COL +
+                " INTEGER NOT NULL PRIMARY KEY, " + UPDATE_COL + " TEXT, " + NAME_COL + " Text, "
+                + USER_COL + " TEXT, " + TIME_COL + " INTEGER, " + USER_IMG + " TEXT, " + MEDIA_COL +
+                " TEXT, " + FAVORITE_COL + " INTEGER, " + RETWEET_COL  + " INTEGER, " + RETWEETED_COL +
+                " INTEGER, " + ORIGINAL_COL + " TEXT);";
+        db.execSQL(DATABASE_CREATE);
+        DATABASE_CREATE = "CREATE TABLE " + TABLE_QUEUE_NAME  + " (" + HOME_COL +
+                " INTEGER NOT NULL PRIMARY KEY, " + UPDATE_COL + " TEXT, " + NAME_COL + " Text, "
+                + USER_COL + " TEXT, " + TIME_COL + " INTEGER, " + USER_IMG + " TEXT, " + MEDIA_COL +
+                " TEXT, " + FAVORITE_COL + " INTEGER, " + RETWEET_COL  + " INTEGER, " + RETWEETED_COL +
+                " INTEGER, " + ORIGINAL_COL + " TEXT);";
         db.execSQL(DATABASE_CREATE);
     }
 
