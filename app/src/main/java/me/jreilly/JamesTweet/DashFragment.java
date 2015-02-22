@@ -133,33 +133,12 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
 
             @Override
             public void onClick(View v) {
-                /*
+
                 Intent intent = new Intent(getActivity(), ComposeActivity.class);
                 mFab.hide();
                 startActivity(intent);
-                */
-                newPosts = false;
-                int rowLimit = 600;
-                String moveCommand = "INSERT INTO home SELECT * FROM queue";
-                try {
-                    mTimelineDB.execSQL(moveCommand);
-
-                }catch (Exception e){}
 
 
-
-                if(DatabaseUtils.queryNumEntries(mTimelineDB, "home") > rowLimit) {
-
-                    String deleteQuery = "DELETE FROM home WHERE "+BaseColumns._ID+" NOT IN " +
-                            "(SELECT "+BaseColumns._ID+" FROM home ORDER BY "+"update_time DESC " +
-                            "limit "+rowLimit+")";
-                    mTimelineDB.execSQL(deleteQuery);
-                    Log.v(LOG_TAG, "Deleteing Tweets!");
-                }
-                mCursor = mTimelineDB.query("home", null, null, null, null, null, "update_time DESC");
-                getActivity().startManagingCursor(mCursor);
-                mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration, mFragment);
-                mRecyclerView.setAdapter(mTweetAdapter);
 
             }
         });

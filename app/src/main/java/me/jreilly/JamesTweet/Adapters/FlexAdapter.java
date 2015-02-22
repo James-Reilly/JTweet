@@ -24,6 +24,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
+import com.twitter.sdk.android.core.models.Tweet;
 
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -34,15 +35,15 @@ import me.jreilly.JamesTweet.TweetParsers.ProfileLink;
 import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 
 /**
- * Created by jreilly on 1/12/15.
+ * Created by jamesreilly on 2/19/15.
  */
-public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> {
+public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
 
     private static final int TYPE_TEXT_ONLY = 0;
     private static final int TYPE_IMAGE = 0;
     private static final int TYPE_URL = 0;
 
-
+    private ArrayList<Tweet> mDataset;
 
     private Cursor mCursor;
 
@@ -53,6 +54,8 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
     private ProfileSwitch mActivity;
 
     private int lastPosition  = 5;
+
+    boolean mNetwork;
 
 
 
@@ -81,16 +84,17 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
         }
     }
 
-    public TweetAdapter(Cursor cursor, View fragView, int time, ProfileSwitch Activity){
+    public FlexAdapter(Cursor cursor, View fragView, int time, ProfileSwitch Activity, boolean network){
 
         mCursor = cursor;
         mShortAnimationDuration = time;
         mFragView = fragView;
         mActivity = Activity;
+        mNetwork = network;
     }
 
     @Override
-    public TweetAdapter.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+    public FlexAdapter.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View v = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.text_layout, viewGroup, false);
 
@@ -98,7 +102,48 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
     }
 
     @Override
-    public void onBindViewHolder(final TweetAdapter.ViewHolder viewHolder, final int i) {
+    public void onBindViewHolder(final FlexAdapter.ViewHolder viewHolder, final int i) {
+        String user_img;
+        final String user_screen;
+        String media_url;
+        String created;
+        int retweeted;
+        String original;
+        String username;
+        String text;
+        final long tId;
+
+
+        if(mNetwork){
+            user_img = mCursor.getString(mCursor.getColumnIndex("user_img"));
+            user_screen = mCursor.getString(mCursor.getColumnIndex("user_screen"));
+            media_url = mCursor.getString(mCursor.getColumnIndex("update_media"));
+            created = mCursor.getString(mCursor.getColumnIndex("update_time"));
+            retweeted = mCursor.getInt(mCursor.getColumnIndex("update_retweeted"));
+            original = mCursor.getString(mCursor.getColumnIndex("update_original"));
+            username = mCursor.getString(mCursor.getColumnIndex("user_name"));
+            tId = mCursor.getLong(mCursor.getColumnIndex(BaseColumns._ID));
+            text = mCursor.getString(mCursor.getColumnIndex("update_text"));
+
+        }else{
+            if(!mCursor.moveToPosition(i)){
+                Log.e("TweetAdapter", "Illegal State Exception!");
+                return;
+
+            } else {
+                user_img = mCursor.getString(mCursor.getColumnIndex("user_img"));
+                user_screen = mCursor.getString(mCursor.getColumnIndex("user_screen"));
+                media_url = mCursor.getString(mCursor.getColumnIndex("update_media"));
+                created = mCursor.getString(mCursor.getColumnIndex("update_time"));
+                retweeted = mCursor.getInt(mCursor.getColumnIndex("update_retweeted"));
+                original = mCursor.getString(mCursor.getColumnIndex("update_original"));
+                username = mCursor.getString(mCursor.getColumnIndex("user_name"));
+                tId = mCursor.getLong(mCursor.getColumnIndex(BaseColumns._ID));
+                text = mCursor.getString(mCursor.getColumnIndex("update_text"));
+
+            }
+
+        }
 
         if(!mCursor.moveToPosition(i)){
             Log.e("TweetAdapter", "Illegal State Exception!");
@@ -106,8 +151,7 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
         } else {
 
             //Load Profile Image
-            Picasso.with(viewHolder.mProfileImage.getContext()).load(mCursor.getString(
-                    mCursor.getColumnIndex("user_img"))).into(
+            Picasso.with(viewHolder.mProfileImage.getContext()).load(user_img).into(
                     viewHolder.mProfileImage
             );
 
@@ -120,13 +164,12 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
                         Log.e("TweetAdapter", "Illegal State Exception!");
 
                     } else {
-                        mActivity.swapToProfile(
-                                mCursor.getString(mCursor.getColumnIndex("user_screen")));
+                        mActivity.swapToProfile(user_screen);
                     }
                 }
             });
 
-            final String imageUrl = mCursor.getString(mCursor.getColumnIndex("update_media"));
+            final String imageUrl = media_url;
             ViewGroup.LayoutParams params =  viewHolder.mImage.getLayoutParams();
 
             //Set Cropped Media image and zoomImage animation
@@ -160,10 +203,10 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
             String retweetText = "";
 
             //Set "Retweeted By " Text
-            if (mCursor.getInt(mCursor.getColumnIndex("update_retweeted")) == 1){
+            if (retweeted == 1){
                 viewHolder.mRetweeted.setVisibility(View.VISIBLE);
                 retweetText = "Retweeted by @";
-                retweetText += mCursor.getString(mCursor.getColumnIndex("update_original"));
+                retweetText += original;
                 viewHolder.mRetweeted.setText(retweetText);
             }else {
                 viewHolder.mRetweeted.setText(null);
@@ -171,9 +214,9 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
             }
 
             //Set Username Text Field
-            viewHolder.mUser.setText(mCursor.getString(mCursor.getColumnIndex("user_name"))
-                    + " - @" + mCursor.getString(mCursor.getColumnIndex("user_screen")));
-            String tweetText = mCursor.getString(mCursor.getColumnIndex("update_text"));
+            viewHolder.mUser.setText(username
+                    + " - @" + user_screen);
+            String tweetText = text;
 
             //Highlight Profile names/hashtags and their clickable spans
             ArrayList<int[]> hashtagSpans = getSpans(tweetText, '#');
@@ -192,15 +235,15 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
             viewHolder.mTweet.setMovementMethod(LinkMovementMethod.getInstance());
             viewHolder.mTweet.setText(tweetContent);
 
-           View.OnClickListener detailTweet =  new View.OnClickListener() {
+            View.OnClickListener detailTweet =  new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if(!mCursor.moveToPosition(i)){
                         Log.e("TweetAdapter", "Illegal State Exception!");
 
                     } else {
-                        long tweetId = mCursor.getLong(mCursor.getColumnIndex(BaseColumns._ID));
-                        mActivity.swapToTweet(tweetId);
+
+                        mActivity.swapToTweet(tId);
                     }
 
 
@@ -390,8 +433,4 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
             lastPosition = position;
         }
     }
-
-
-
-
 }

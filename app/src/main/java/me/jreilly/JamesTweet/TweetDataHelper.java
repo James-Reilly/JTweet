@@ -67,13 +67,13 @@ public class TweetDataHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         DATABASE_CREATE = "CREATE TABLE " + TIMELINE_TABLE_NAME  + " (" + HOME_COL +
-                " INTEGER NOT NULL PRIMARY KEY, " + UPDATE_COL + " TEXT, " + NAME_COL + " Text, "
+                " INTEGER PRIMARY KEY AUTOINCREMENT, " + UPDATE_COL + " TEXT, " + NAME_COL + " Text, "
                 + USER_COL + " TEXT, " + TIME_COL + " INTEGER, " + USER_IMG + " TEXT, " + MEDIA_COL +
                 " TEXT, " + FAVORITE_COL + " INTEGER, " + RETWEET_COL  + " INTEGER, " + RETWEETED_COL +
                 " INTEGER, " + ORIGINAL_COL + " TEXT);";
         db.execSQL(DATABASE_CREATE);
         DATABASE_CREATE = "CREATE TABLE " + TABLE_QUEUE_NAME  + " (" + HOME_COL +
-                " INTEGER NOT NULL PRIMARY KEY, " + UPDATE_COL + " TEXT, " + NAME_COL + " Text, "
+                " INTEGER PRIMARY KEY AUTOINCREMENT, " + UPDATE_COL + " TEXT, " + NAME_COL + " Text, "
                 + USER_COL + " TEXT, " + TIME_COL + " INTEGER, " + USER_IMG + " TEXT, " + MEDIA_COL +
                 " TEXT, " + FAVORITE_COL + " INTEGER, " + RETWEET_COL  + " INTEGER, " + RETWEETED_COL +
                 " INTEGER, " + ORIGINAL_COL + " TEXT);";
