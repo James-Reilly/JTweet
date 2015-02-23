@@ -60,6 +60,7 @@ public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
 
 
 
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView mTweet;
         public TextView mUser;
@@ -67,6 +68,7 @@ public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
         public ImageButton mProfileImage;
         public LinearLayout mContainer;
         public TextView mRetweeted;
+
 
 
 
@@ -84,9 +86,10 @@ public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
         }
     }
 
-    public FlexAdapter(Cursor cursor, View fragView, int time, ProfileSwitch Activity, boolean network){
+    public FlexAdapter(Cursor cursor, ArrayList<Tweet> myDataset, View fragView, int time, ProfileSwitch Activity, boolean network){
 
         mCursor = cursor;
+        mDataset = myDataset;
         mShortAnimationDuration = time;
         mFragView = fragView;
         mActivity = Activity;
@@ -115,15 +118,26 @@ public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
 
 
         if(mNetwork){
-            user_img = mCursor.getString(mCursor.getColumnIndex("user_img"));
-            user_screen = mCursor.getString(mCursor.getColumnIndex("user_screen"));
-            media_url = mCursor.getString(mCursor.getColumnIndex("update_media"));
-            created = mCursor.getString(mCursor.getColumnIndex("update_time"));
-            retweeted = mCursor.getInt(mCursor.getColumnIndex("update_retweeted"));
-            original = mCursor.getString(mCursor.getColumnIndex("update_original"));
-            username = mCursor.getString(mCursor.getColumnIndex("user_name"));
-            tId = mCursor.getLong(mCursor.getColumnIndex(BaseColumns._ID));
-            text = mCursor.getString(mCursor.getColumnIndex("update_text"));
+            Tweet tweet = mDataset.get(i);
+            created = tweet.createdAt;
+            original = tweet.user.screenName;
+            if(tweet.retweetedStatus != null){
+                retweeted = 1;
+                tweet = tweet.retweetedStatus;
+            }else{
+                retweeted= 0;
+            }
+            user_img = tweet.user.profileImageUrl;
+            user_screen = tweet.user.screenName;
+            if(tweet.entities != null && (tweet.entities.media != null)){
+                media_url = tweet.entities.media.get(0).mediaUrl;
+            }else{
+                media_url = "null";
+            }
+
+            username = tweet.user.name;
+            tId = tweet.id;
+            text = tweet.text;
 
         }else{
             if(!mCursor.moveToPosition(i)){
