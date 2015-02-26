@@ -2,12 +2,21 @@ package me.jreilly.JamesTweet;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.models.Tweet;
+
+import java.util.List;
 
 /**
  * Created by jreilly on 1/12/15.
@@ -96,7 +105,8 @@ public class TweetDataHelper extends SQLiteOpenHelper {
 
         int retweeted = 0;
         try {
-            homeValues.put(TIME_COL, tweet.createdAt);
+            String createdTime = tweet.createdAt;
+
             if(tweet.retweetedStatus != null) {
                 tweet = tweet.retweetedStatus;
                 retweeted = 1;
@@ -105,7 +115,7 @@ public class TweetDataHelper extends SQLiteOpenHelper {
             homeValues.put(UPDATE_COL, tweet.text);
             homeValues.put(NAME_COL, tweet.user.name);
             homeValues.put(USER_COL, tweet.user.screenName);
-
+            homeValues.put(TIME_COL, createdTime);
             homeValues.put(USER_IMG, tweet.user.profileImageUrl);
             if (tweet.entities != null && (tweet.entities.media != null)){
                 homeValues.put(MEDIA_COL, tweet.entities.media.get(0).mediaUrl);
@@ -126,5 +136,62 @@ public class TweetDataHelper extends SQLiteOpenHelper {
 
 
         return homeValues;
+    }
+
+    public Callback<List<Tweet>> callBackMaker(final int mMaxItems,
+                                               final RecyclerView mRecyclerView,
+                                               final Cursor mCursor,
+                                               final SQLiteDatabase mTimelineDB,
+                                               final TweetDataHelper mHelper,
+                                               final SwipeRefreshLayout mSwipeRefreshLayout
+                                               ){
+        final int position = mCursor.getPosition();
+        return new Callback<List<Tweet>>() {
+            @Override
+            public void success(Result<List<Tweet>> listResult) {
+
+                long numEntries = DatabaseUtils.queryNumEntries(mTimelineDB, "home");
+                List<Tweet> list = listResult.data.subList(0,listResult.data.size());
+
+                for (Tweet t : list) {
+                    try {
+                        ContentValues tweetValues = mHelper.getValues(t);
+                        mTimelineDB.insertOrThrow("home", null, tweetValues);
+                        Log.v("NEW CONTEXT", "Added Tweet Tweets!");
+
+                    }catch (Exception te) { Log.e("NEW CONTEXT", "Exception: " + te);}
+
+                }
+
+
+
+                int rowLimit = 50;
+
+                if(DatabaseUtils.queryNumEntries(mTimelineDB, "home") > rowLimit) {
+                    String deleteQuery = "DELETE FROM home WHERE "+BaseColumns._ID+" NOT IN " +
+                            "(SELECT "+BaseColumns._ID+" FROM home ORDER BY "+"update_time DESC " +
+                            "limit "+rowLimit+")";
+                    mTimelineDB.execSQL(deleteQuery);
+                    Log.v("NEW CONTEXT", "Deleteing Tweets!");
+                }
+                mRecyclerView.getAdapter().notifyDataSetChanged();
+                if (mSwipeRefreshLayout != null){
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }else{
+                    mRecyclerView.smoothScrollToPosition(position);
+                }
+
+                Log.v("NEW CONTEXT", "All done!");
+
+
+
+            }
+
+            @Override
+            public void failure(TwitterException e) {
+                Log.e("NEW CONTEXT", "Exception " + e);
+
+            }
+        };
     }
 }

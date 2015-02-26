@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/JamesTweet.iml" filepath="$PROJECT_DIR$/JamesTweet.iml" />
-      <module fileurl="file://$PROJECT_DIR$/RecylerViewTest.iml" filepath="$PROJECT_DIR$/RecylerViewTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TweetTweet.iml" filepath="$PROJECT_DIR$/TweetTweet.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

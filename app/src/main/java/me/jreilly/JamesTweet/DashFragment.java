@@ -3,15 +3,10 @@ package me.jreilly.JamesTweet;
 
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
-import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.provider.BaseColumns;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -30,10 +25,17 @@ import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.models.Tweet;
 import com.twitter.sdk.android.core.services.StatusesService;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-import me.jreilly.JamesTweet.Adapters.TweetAdapter;
+import io.realm.Realm;
+import io.realm.RealmResults;
+import me.jreilly.JamesTweet.Adapters.RealmAdapter;
+import me.jreilly.JamesTweet.Models.TweetRealm;
 import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 
 
@@ -62,7 +64,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     private SQLiteDatabase mTimelineDB;
     private Cursor mCursor;
     private Cursor mCursorAdapter;
-    private TweetAdapter mTweetAdapter;
+    private RealmAdapter mTweetAdapter;
     private BroadcastReceiver mTweetReciever;
 
 
@@ -73,7 +75,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
 
     /*Variables for updating the timeline */
     private TimelineUpdater mTimelineUpdater;
-    private TimelineExtender mTimelineExtender;
+
     private Callback<List<Tweet>> mCallBack;
 
 
@@ -81,6 +83,8 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     private int mShortAnimationDuration;
     private View fragView;
     private ProfileSwitch mFragment;
+
+    RealmResults<TweetRealm> mDataset;
 
 
     public DashFragment() {
@@ -95,8 +99,8 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_timeline);
 
         //Initilize the Classes that refresh the timeline and extend the timeline on scrolling;
-        mTimelineUpdater = new TimelineUpdater();
-        mTimelineExtender = new TimelineExtender();
+
+
 
 
         //Initialize Variables for Adapter and (ProfileSwitch)
@@ -104,6 +108,11 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         mFragment = this;
         mShortAnimationDuration = getResources().getInteger(
                 android.R.integer.config_shortAnimTime);
+
+
+
+        //Realm Test Code!
+
 
 
 
@@ -149,20 +158,52 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         setupTimeline();
 
         //Allows endless scrolling (theoretically)
-        mRecyclerView.setOnScrollListener(
-                new EndlessRecyclerOnScrollListener((LinearLayoutManager)mLayoutManager) {
 
-
-                  @Override
-                  public void onLoadMore() {
-
-                      mTimelineExtender.run();
-
-                  }
-              });
 
 
         return rootView;
+    }
+
+    public Realm getRealm(){
+        return Realm.getInstance(this.getActivity());
+    }
+
+    public void insertToRealm(Tweet t){
+        Realm realm = Realm.getInstance(this.getActivity());
+
+        realm.beginTransaction();
+
+
+
+        TweetRealm tweet = realm.createObject(TweetRealm.class);
+        String dateString = t.createdAt;
+        DateFormat format = new SimpleDateFormat("EEE MMM dd kk:mm:ss ZZZZZ yyyy");
+        Date date;
+        try {
+            date = format.parse(dateString);
+            tweet.setDate(date);
+        } catch (ParseException e) {
+            Log.e(LOG_TAG, "Error: " + e);
+        }
+        tweet.setRetweetedBy(t.user.screenName);
+        tweet.setOriginalId(t.id);
+        if(t.retweetedStatus != null){
+            t = t.retweetedStatus;
+            tweet.setRetweetedStatus(true);
+        }else{
+            tweet.setRetweetedStatus(false);
+        }
+        tweet.setProfileImageUrl(t.user.profileImageUrl);
+        tweet.setId(t.id);
+        tweet.setName(t.user.name);
+        tweet.setScreename(t.user.screenName);
+        tweet.setText(t.text);
+        if(t.entities != null && t.entities.media != null){
+            tweet.setMediaUrl(t.entities.media.get(0).mediaUrl);
+        }else{
+            tweet.setMediaUrl("null");
+        }
+        realm.commitTransaction();
     }
 
     /**
@@ -175,34 +216,78 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
 
         try
         {
-            //get reference to the list view
 
-            //instantiate database helper
-            mHelper = new TweetDataHelper(getActivity(), TweetDataHelper.DATABASE_NAME);
-            //get the database
-            mTimelineDB = mHelper.getReadableDatabase();
-
-
-
-            //query the database, most recent tweets first
-            mCursor = mTimelineDB.query("home", null, null, null, null, null, "update_time DESC");
-
-            //manage the updates using a cursor
 
             //instantiate adapter
-            mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration, mFragment );
+
+            //instantiate receiver class for finding out when new updates are available
+
+            mCallBack = new Callback<List<Tweet>>() {
+                @Override
+                public void success(Result<List<Tweet>> listResult) {
+
+                    List<Tweet> list = listResult.data;
+                    Realm realm = Realm.getInstance(getActivity());
+
+                    for (Tweet t : list) {
+                        try {
+                            insertToRealm(t);
+                        }catch (Exception te) { Log.e("NEW CONTEXT", "Exception: " + te);}
+
+                    }
+
+
+
+
+                    int rowLimit = 50;
+
+
+
+                    RealmResults<TweetRealm> result = realm.where(TweetRealm.class).findAll();
+
+                    result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
+                    int curSize = result.size();
+                    if(curSize > rowLimit){
+                        while(curSize > rowLimit){
+                            realm.beginTransaction();
+                            result.get(result.size()-1).removeFromRealm();
+                            realm.commitTransaction();
+                            curSize--;
+                        }
+                        result = realm.where(TweetRealm.class).findAll();
+                        result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
+                    }
+
+                    mDataset = result;
+                    mRecyclerView.getAdapter().notifyDataSetChanged();
+                    mSwipeRefreshLayout.setRefreshing(false);
+
+
+                    Log.v("NEW CONTEXT", "All done!");
+
+
+
+                }
+
+                @Override
+                public void failure(TwitterException e) {
+                    Log.e("NEW CONTEXT", "Exception " + e);
+
+                }
+            };
+            Realm realm = getRealm();
+            RealmResults<TweetRealm> result = realm.where(TweetRealm.class).findAll();
+            result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
+
+            mDataset = result;
+            mTimelineUpdater = new TimelineUpdater();
+            mTimelineUpdater.run();
+            mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment );
 
             //apply the adapter to the timeline view
             //this will make it populate the new update data in the view
             mRecyclerView.setAdapter(mTweetAdapter);
-            //instantiate receiver class for finding out when new updates are available
-            mTweetReciever = new TwitterUpdateReceiver();
-            //register for updates
-            getActivity().registerReceiver(mTweetReciever, new IntentFilter("TWITTER_UPDATES"));
 
-            //start the service for updates now
-            getActivity().getApplicationContext().startService(
-                    new Intent(getActivity().getApplicationContext(), TimelineService.class));
 
 
 
@@ -226,147 +311,37 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         startActivity(intent);
     }
 
+
+
     @Override
     public void onDestroy() {
         super.onDestroy();
-        try {
-            //stop the updater Service
-            getActivity().stopService(new Intent(getActivity(), TimelineService.class));
-            //remove receiver register
-            getActivity().unregisterReceiver(mTweetReciever);
-            //close the database
-            mTimelineDB.close();
-        }
-        catch(Exception se) { Log.e(LOG_TAG, "unable to stop Service or receiver"); }
+        getRealm().close();
+
     }
 
 
-    class TwitterUpdateReceiver extends BroadcastReceiver{
 
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.e("Reciver", "Recieiving?");
-            newPosts = true;
-
-        }
-    }
 
     class TimelineUpdater implements Runnable {
 
         @Override
         public void run() {
-
+            long id;
             Log.e(LOG_TAG, "Getting Tweets!");
-            final StatusesService service = Twitter.getApiClient().getStatusesService();
-            service.homeTimeline(50, null, null, null, null, null, true, new Callback<List<Tweet>>() {
-                @Override
-                public void success(Result<List<Tweet>> listResult) {
-                    boolean statusChanges = false;
+            if(mDataset != null && mDataset.size() != 0){
+                id = mDataset.get(0).getOriginalId();
+                final StatusesService service = Twitter.getApiClient().getStatusesService();
+                service.homeTimeline(50, id, null, null, null, null, true, mCallBack);
+            }else{
+                final StatusesService service = Twitter.getApiClient().getStatusesService();
+                service.homeTimeline(50, null, null, null, null, null, true, mCallBack);
 
-                        for (Tweet t : listResult.data) {
-                            try {
-                            ContentValues tweetValues = mHelper.getValues(t);
-                            mTimelineDB.insertOrThrow("home", null, tweetValues);
-                            statusChanges = true;
-
-
-                        } catch (Exception te) { Log.e(LOG_TAG, "Exception: " + te);
-                            }
-                    }
-
-
-                    int rowLimit = mMaxItems;
-                    if(DatabaseUtils.queryNumEntries(mTimelineDB, "home") > rowLimit) {
-                        String deleteQuery = "DELETE FROM home WHERE "+BaseColumns._ID+" NOT IN " +
-                                "(SELECT "+BaseColumns._ID+" FROM home ORDER BY "+"update_time DESC " +
-                                "limit "+rowLimit+")";
-                        mTimelineDB.execSQL(deleteQuery);
-                        Log.v(LOG_TAG, "Deleteing Tweets!");
-                    }
-                    mCursor = mTimelineDB.query("home", null, null, null, null, null, "update_time DESC");
-                    getActivity().startManagingCursor(mCursor);
-                    mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration, mFragment);
-                    mRecyclerView.setAdapter(mTweetAdapter);
-
-
-                    mSwipeRefreshLayout.setRefreshing(false);
-
-
-
-                }
-
-                @Override
-                public void failure(TwitterException e) {
-                    Log.e(LOG_TAG, "Exception " + e);
-
-                }
-            });
-
-
+            }
         }
     }
 
-    class TimelineExtender implements Runnable {
 
-        @Override
-        public void run() {
-
-            Log.e(LOG_TAG, "Getting Tweets Extending!");
-            final int position = mCursor.getPosition();
-            mCursor.moveToLast();
-            long tweetId = mCursor.getLong(mCursor.getColumnIndex(BaseColumns._ID));
-            final StatusesService service = Twitter.getApiClient().getStatusesService();
-
-            service.homeTimeline(50, null, tweetId, null, null, null, true, new Callback<List<Tweet>>() {
-                @Override
-                public void success(Result<List<Tweet>> listResult) {
-
-                    long numEntries = DatabaseUtils.queryNumEntries(mTimelineDB, "home");
-                    List<Tweet> list = listResult.data.subList(0,listResult.data.size());
-
-                        for (Tweet t : list) {
-                            try {
-                                ContentValues tweetValues = mHelper.getValues(t);
-                                mTimelineDB.insertOrThrow("home", null, tweetValues);
-
-                            }catch (Exception te) { Log.e(LOG_TAG, "Exception: " + te);}
-
-                        }
-
-
-
-                        int rowLimit = mMaxItems;
-
-                        if(DatabaseUtils.queryNumEntries(mTimelineDB, "home") > rowLimit) {
-                            String deleteQuery = "DELETE FROM home WHERE "+BaseColumns._ID+" NOT IN " +
-                                    "(SELECT "+BaseColumns._ID+" FROM home ORDER BY "+"update_time DESC " +
-                                    "limit "+rowLimit+")";
-                            mTimelineDB.execSQL(deleteQuery);
-                            Log.v(LOG_TAG, "Deleteing Tweets!");
-                        }
-                        mCursor = mTimelineDB.query("home", null, null, null, null, null, "update_time DESC");
-                        getActivity().startManagingCursor(mCursor);
-                        mTweetAdapter = new TweetAdapter(mCursor, fragView, mShortAnimationDuration, mFragment);
-                        mRecyclerView.setAdapter(mTweetAdapter);
-
-
-                    mRecyclerView.scrollToPosition(position);
-
-
-
-
-                }
-
-                @Override
-                public void failure(TwitterException e) {
-                    Log.e(LOG_TAG, "Exception " + e);
-
-                }
-            });
-
-
-        }
-    }
 
     public abstract class EndlessRecyclerOnScrollListener extends RecyclerView.OnScrollListener {
         private int previousToral = 0;

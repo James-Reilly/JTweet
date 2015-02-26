@@ -4,14 +4,14 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.provider.BaseColumns;
 import android.support.v7.widget.RecyclerView;
 import android.text.SpannableString;
+import android.text.format.DateUtils;
 import android.text.method.LinkMovementMethod;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,26 +24,24 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
-import com.twitter.sdk.android.core.models.Tweet;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.realm.RealmResults;
+import me.jreilly.JamesTweet.Models.TweetRealm;
 import me.jreilly.JamesTweet.R;
 import me.jreilly.JamesTweet.TweetParsers.ProfileLink;
 import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 
 /**
- * Created by jamesreilly on 2/19/15.
+ * Created by jamesreilly on 2/24/15.
  */
-public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
-
-    private static final int TYPE_TEXT_ONLY = 0;
-    private static final int TYPE_IMAGE = 0;
-    private static final int TYPE_URL = 0;
-
-    private ArrayList<Tweet> mDataset;
+public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
+    private RealmResults<TweetRealm> mDataset;
 
     private Cursor mCursor;
 
@@ -56,6 +54,7 @@ public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
     private int lastPosition  = 5;
 
     boolean mNetwork;
+    private Context context;
 
 
 
@@ -68,6 +67,7 @@ public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
         public ImageButton mProfileImage;
         public LinearLayout mContainer;
         public TextView mRetweeted;
+        public TextView mTime;
 
 
 
@@ -81,23 +81,24 @@ public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
             mProfileImage = (ImageButton) list_item.findViewById(R.id.user_image);
             mContainer = (LinearLayout) list_item.findViewById(R.id.item_layout_container);
             mRetweeted = (TextView) list_item.findViewById(R.id.my_retweeted);
+            mTime = (TextView) list_item.findViewById(R.id.my_time);
 
 
         }
     }
 
-    public FlexAdapter(Cursor cursor, ArrayList<Tweet> myDataset, boolean network, View fragView, int time, ProfileSwitch Activity){
+    public RealmAdapter(RealmResults<TweetRealm> realmResults, View fragView, int time, ProfileSwitch Activity){
 
-        mCursor = cursor;
-        mDataset = myDataset;
+
+        mDataset = realmResults;
         mShortAnimationDuration = time;
         mFragView = fragView;
         mActivity = Activity;
-        mNetwork = network;
+
     }
 
     @Override
-    public FlexAdapter.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+    public RealmAdapter.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View v = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.text_layout, viewGroup, false);
 
@@ -105,59 +106,19 @@ public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(final FlexAdapter.ViewHolder viewHolder, final int i) {
-        String user_img;
-        final String user_screen;
-        String media_url;
-        String created;
-        int retweeted;
-        String original;
-        String username;
-        String text;
-        final long tId;
+    public void onBindViewHolder(final RealmAdapter.ViewHolder viewHolder, final int i) {
+        String user_img = mDataset.get(i).getProfileImageUrl();
+        final String user_screen = mDataset.get(i).getScreename();
+        String media_url = mDataset.get(i).getMediaUrl();
+        Date created = mDataset.get(i).getDate();
+        boolean retweeted = mDataset.get(i).isRetweetedStatus();
+        String original = mDataset.get(i).getRetweetedBy();
+        String username = mDataset.get(i).getName();
+        String text = mDataset.get(i).getText();
+        final long tId = mDataset.get(i).getId();
 
 
-        if(mNetwork){
-            Tweet tweet = mDataset.get(i);
-            created = tweet.createdAt;
-            original = tweet.user.screenName;
-            if(tweet.retweetedStatus != null){
-                retweeted = 1;
-                tweet = tweet.retweetedStatus;
-            }else{
-                retweeted= 0;
-            }
-            user_img = tweet.user.profileImageUrl;
-            user_screen = tweet.user.screenName;
-            if(tweet.entities != null && (tweet.entities.media != null)){
-                media_url = tweet.entities.media.get(0).mediaUrl;
-            }else{
-                media_url = "null";
-            }
 
-            username = tweet.user.name;
-            tId = tweet.id;
-            text = tweet.text;
-
-        }else{
-            if(!mCursor.moveToPosition(i)){
-                Log.e("TweetAdapter", "Illegal State Exception!");
-                return;
-
-            } else {
-                user_img = mCursor.getString(mCursor.getColumnIndex("user_img"));
-                user_screen = mCursor.getString(mCursor.getColumnIndex("user_screen"));
-                media_url = mCursor.getString(mCursor.getColumnIndex("update_media"));
-                created = mCursor.getString(mCursor.getColumnIndex("update_time"));
-                retweeted = mCursor.getInt(mCursor.getColumnIndex("update_retweeted"));
-                original = mCursor.getString(mCursor.getColumnIndex("update_original"));
-                username = mCursor.getString(mCursor.getColumnIndex("user_name"));
-                tId = mCursor.getLong(mCursor.getColumnIndex(BaseColumns._ID));
-                text = mCursor.getString(mCursor.getColumnIndex("update_text"));
-
-            }
-
-        }
 
 
 
@@ -171,7 +132,7 @@ public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
 
             @Override
             public void onClick(View v) {
-                    mActivity.swapToProfile(user_screen);
+                mActivity.swapToProfile(user_screen);
             }
         });
 
@@ -209,7 +170,7 @@ public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
         String retweetText = "";
 
         //Set "Retweeted By " Text
-        if (retweeted == 1){
+        if (retweeted){
             viewHolder.mRetweeted.setVisibility(View.VISIBLE);
             retweetText = "Retweeted by @";
             retweetText += original;
@@ -220,6 +181,8 @@ public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
         }
 
         //Set Username Text Field
+        Calendar cal = Calendar.getInstance();
+        viewHolder.mTime.setText(DateUtils.getRelativeTimeSpanString(created.getTime()));
         viewHolder.mUser.setText(username
                 + " - @" + user_screen);
         String tweetText = text;
@@ -245,7 +208,7 @@ public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
             @Override
             public void onClick(View v) {
 
-                    mActivity.swapToTweet(tId);
+                mActivity.swapToTweet(tId);
 
 
 
@@ -263,12 +226,11 @@ public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
 
     @Override
     public int getItemCount() {
-        if(mNetwork){
-            return mDataset.size();
-        }else{
-            return mCursor.getCount();
-        }
+        return mDataset.size();
 
+    }
+    public RealmResults<TweetRealm> getRealmResults() {
+        return mDataset;
     }
 
     public ArrayList<int[]> getSpans(String body, char prefix) {
@@ -439,5 +401,48 @@ public class FlexAdapter extends RecyclerView.Adapter<FlexAdapter.ViewHolder> {
             viewToAnimate.startAnimation(animation);
             lastPosition = position;
         }
+    }
+
+    public String getDifference(long startDate, long endDate){
+
+        //milliseconds
+        long different = endDate - startDate;
+
+
+
+        long secondsInMilli = 1000;
+        long minutesInMilli = secondsInMilli * 60;
+        long hoursInMilli = minutesInMilli * 60;
+        long daysInMilli = hoursInMilli * 24;
+
+        long elapsedDays = different / daysInMilli;
+        different = different % daysInMilli;
+
+        long elapsedHours = different / hoursInMilli;
+        different = different % hoursInMilli;
+
+        long elapsedMinutes = different / minutesInMilli;
+        different = different % minutesInMilli;
+
+        long elapsedSeconds = different / secondsInMilli;
+
+        System.out.printf(
+                "%d days, %d hours, %d minutes, %d seconds%n",
+                elapsedDays,
+                elapsedHours, elapsedMinutes, elapsedSeconds);
+
+        if(elapsedDays != 0L){
+            if(elapsedDays > 31L){
+                return "-";
+            }
+            return Long.toString(elapsedDays) + "d";
+        }else if (elapsedHours != 0L){
+            return Long.toString(elapsedHours) + "h";
+        }else if (elapsedMinutes != 0L){
+            return Long.toString(elapsedMinutes) + "m";
+        }else{
+            return Long.toString(elapsedSeconds) + "s";
+        }
+
     }
 }

@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.provider.BaseColumns;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
@@ -64,12 +65,14 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
         public ImageButton mProfileImage;
         public LinearLayout mContainer;
         public TextView mRetweeted;
+        public CardView mCardView;
 
 
 
         public View mlayout;
         public ViewHolder(View list_item){
             super(list_item);
+            mCardView = (CardView) list_item.findViewById(R.id.card_view);
             mUser = (TextView) list_item.findViewById(R.id.my_user);
             mTweet = (TextView) list_item.findViewById(R.id.my_text);
             mImage = (ImageButton) list_item.findViewById(R.id.my_picture);
@@ -104,6 +107,8 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
             Log.e("TweetAdapter", "Illegal State Exception!");
 
         } else {
+            final float scale = mFragView.getResources().getDisplayMetrics().density;
+            viewHolder.mCardView.setElevation(1f * scale);
 
             //Load Profile Image
             Picasso.with(viewHolder.mProfileImage.getContext()).load(mCursor.getString(
