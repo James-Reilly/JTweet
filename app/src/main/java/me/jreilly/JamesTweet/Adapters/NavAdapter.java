@@ -1,5 +1,6 @@
 package me.jreilly.JamesTweet.Adapters;
 
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +16,7 @@ import me.jreilly.JamesTweet.R;
 public class NavAdapter extends RecyclerView.Adapter<NavAdapter.ViewHolder> {
 
 private String[] mDataset;
+private Context mContext;
 private int currentPosition;
 
 public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -28,8 +30,9 @@ public static class ViewHolder extends RecyclerView.ViewHolder {
     }
 }
 
-    public NavAdapter(String[] myDataset){
+    public NavAdapter(String[] myDataset, Context context){
         mDataset = myDataset;
+        mContext = context;
     }
 
     @Override
@@ -43,6 +46,21 @@ public static class ViewHolder extends RecyclerView.ViewHolder {
 
     @Override
     public void onBindViewHolder(NavAdapter.ViewHolder viewHolder, int i) {
+
+        if(mDataset[i].equals("Timeline")){
+            viewHolder.mRowIcon.setImageDrawable(mContext.getResources()
+                    .getDrawable(R.drawable.ic_timeline));
+        } else if(mDataset[i].equals("Mentions")){
+            viewHolder.mRowIcon.setImageDrawable(mContext.getResources()
+                    .getDrawable(R.drawable.ic_mentions));
+        } else if(mDataset[i].equals("Favorites")){
+            viewHolder.mRowIcon.setImageDrawable(mContext.getResources()
+                    .getDrawable(R.drawable.ic_favorite));
+        } else if(mDataset[i].equals("Settings")){
+            viewHolder.mRowIcon.setImageDrawable(mContext.getResources()
+                    .getDrawable(R.drawable.ic_settings_applications));
+        }
+
         viewHolder.mRowText.setText(mDataset[i]);
     }
 

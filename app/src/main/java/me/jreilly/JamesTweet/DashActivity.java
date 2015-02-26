@@ -55,7 +55,7 @@ public class DashActivity extends ActionBarActivity{
         mDrawerView = (RecyclerView) findViewById(R.id.left_drawer);
         mDrawerView.setHasFixedSize(true);
 
-        mAdapter = new NavAdapter(navItems);
+        mAdapter = new NavAdapter(navItems, this);
         mActivity = this;
         mDrawerView.setAdapter(mAdapter);
 
