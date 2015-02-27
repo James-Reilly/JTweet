@@ -44,6 +44,7 @@ public class LoginActivity extends ActionBarActivity {
             @Override
             public void success(Result<TwitterSession> result) {
                 //Starts the main activity
+
                 startDashboard();
 
             }

@@ -2,9 +2,9 @@ package me.jreilly.JamesTweet;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -16,6 +16,10 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.twitter.sdk.android.Twitter;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.models.User;
 
 import me.jreilly.JamesTweet.Adapters.NavAdapter;
 
@@ -34,9 +38,12 @@ public class DashActivity extends ActionBarActivity{
 
     ActionBarDrawerToggle mDrawerToggle;
 
+    String mUsername = "Test";
+    String mprofileUrl;
+
     /*String Array of the navigation drawer items */
     String[] navItems = {
-            "Profile",
+
             "Timeline",
             "Mentions",
             "Favorites",
@@ -48,6 +55,21 @@ public class DashActivity extends ActionBarActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Long uId = Twitter.getSessionManager().getActiveSession().getUserId();
+        Twitter.getApiClient().getAccountService().verifyCredentials(true, null, new Callback<User>() {
+            @Override
+            public void success(Result<User> userResult) {
+                mUsername = userResult.data.name;
+                mprofileUrl = userResult.data.profileImageUrl;
+                mAdapter.notifyDataSetChanged();
+
+            }
+
+            @Override
+            public void failure(TwitterException e) {
+
+            }
+        });
 
         //Setting the navigation drawer
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -55,7 +77,7 @@ public class DashActivity extends ActionBarActivity{
         mDrawerView = (RecyclerView) findViewById(R.id.left_drawer);
         mDrawerView.setHasFixedSize(true);
 
-        mAdapter = new NavAdapter(navItems, this);
+        mAdapter = new NavAdapter(navItems, this, mUsername, mprofileUrl);
         mActivity = this;
         mDrawerView.setAdapter(mAdapter);
 
@@ -75,7 +97,7 @@ public class DashActivity extends ActionBarActivity{
 
                 if (child != null && mGestureDetector.onTouchEvent(e)){
 
-                    if(navItems[rv.getChildPosition(child)].equals("Profile")){
+                    if(rv.getChildPosition(child) == 0){
                         //Get Screen name of User
                         String uId = Twitter.getSessionManager().getActiveSession().getUserName();
                         //
@@ -83,7 +105,7 @@ public class DashActivity extends ActionBarActivity{
                         Intent intent = new Intent(mActivity, ProfileActivity.class)
                                 .putExtra(ProfileActivity.PROFILE_KEY, uId);
                         startActivity(intent);
-                    } else if (navItems[rv.getChildPosition(child)].equals("Timeline")){
+                    } else if (navItems[rv.getChildPosition(child) - 1].equals("Timeline")){
                         mDrawer.closeDrawers();
                         getSupportFragmentManager().beginTransaction()
                                 .replace(R.id.content_frame, new DashFragment()).commit();

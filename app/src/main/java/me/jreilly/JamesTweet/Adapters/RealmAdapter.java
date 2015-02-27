@@ -62,9 +62,6 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
     private Context context;
 
 
-
-
-
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView mTweet;
         public TextView mUser;
@@ -93,7 +90,6 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
     }
 
     public RealmAdapter(RealmResults<TweetRealm> realmResults, View fragView, int time, ProfileSwitch Activity){
-
 
         mDataset = realmResults;
         mShortAnimationDuration = time;
@@ -395,50 +391,10 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
             viewToAnimate.startAnimation(animation);
             lastPosition = position;
         }
-    }
-
-    public String getDifference(long startDate, long endDate){
-
-        //milliseconds
-        long different = endDate - startDate;
-
-
-
-        long secondsInMilli = 1000;
-        long minutesInMilli = secondsInMilli * 60;
-        long hoursInMilli = minutesInMilli * 60;
-        long daysInMilli = hoursInMilli * 24;
-
-        long elapsedDays = different / daysInMilli;
-        different = different % daysInMilli;
-
-        long elapsedHours = different / hoursInMilli;
-        different = different % hoursInMilli;
-
-        long elapsedMinutes = different / minutesInMilli;
-        different = different % minutesInMilli;
-
-        long elapsedSeconds = different / secondsInMilli;
-
-        System.out.printf(
-                "%d days, %d hours, %d minutes, %d seconds%n",
-                elapsedDays,
-                elapsedHours, elapsedMinutes, elapsedSeconds);
-
-        if(elapsedDays != 0L){
-            if(elapsedDays > 31L){
-                return "-";
-            }
-            return Long.toString(elapsedDays) + "d";
-        }else if (elapsedHours != 0L){
-            return Long.toString(elapsedHours) + "h";
-        }else if (elapsedMinutes != 0L){
-            return Long.toString(elapsedMinutes) + "m";
-        }else{
-            return Long.toString(elapsedSeconds) + "s";
-        }
 
     }
+
+
 
     public class CircleTransform implements Transformation {
         @Override
