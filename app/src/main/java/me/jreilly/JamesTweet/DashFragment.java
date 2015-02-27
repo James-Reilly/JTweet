@@ -282,7 +282,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
             mDataset = result;
             mTimelineUpdater = new TimelineUpdater();
             mTimelineUpdater.run();
-            mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment );
+            mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, null );
 
             //apply the adapter to the timeline view
             //this will make it populate the new update data in the view

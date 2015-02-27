@@ -15,7 +15,9 @@ import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.models.Search;
 import com.twitter.sdk.android.core.models.Tweet;
+import com.twitter.sdk.android.core.models.User;
 import com.twitter.sdk.android.core.services.StatusesService;
 
 import java.text.DateFormat;
@@ -54,6 +56,8 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
     private int mShortAnimationDuration;
     private View fragView;
     private ProfileSwitch mFragment;
+
+    private User mUser;
 
 
 
@@ -188,7 +192,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
         result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
         mDataset = result;
         getTweets(true);
-        mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment );
+        mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, mUserId );
 
         //apply the adapter to the timeline view
         //this will make it populate the new update data in the view

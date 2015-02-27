@@ -29,10 +29,18 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Transformation;
+import com.twitter.sdk.android.Twitter;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.models.Search;
+import com.twitter.sdk.android.core.models.Tweet;
+import com.twitter.sdk.android.core.models.User;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,13 +56,17 @@ import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
     private RealmResults<TweetRealm> mDataset;
 
-    private Cursor mCursor;
+    private String mProfileName;
 
     private Animator mCurrentAnimator;
     private int mShortAnimationDuration;
     private View mFragView;
 
     private ProfileSwitch mActivity;
+
+    private static final int TYPE_HEADER = 0;  // Declaring Variable to Understand which View is being worked on
+    // IF the view under inflation and population is header or Item
+    private static final int TYPE_ITEM = 1;
 
     private int lastPosition  = 5;
 
@@ -72,152 +84,244 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
         public TextView mTime;
 
 
+        public TextView mFollowers;
+        public TextView mFollowing;
+        public TextView mDescription;
+        public ImageView mBackground;
+        public TextView mScreenName;
+
+        public int Holderid;
+
+
 
 
         public View mlayout;
-        public ViewHolder(View list_item){
+        public ViewHolder(View list_item, int type){
             super(list_item);
-            mUser = (TextView) list_item.findViewById(R.id.my_user);
-            mTweet = (TextView) list_item.findViewById(R.id.my_text);
-            mImage = (ImageButton) list_item.findViewById(R.id.my_picture);
-            mProfileImage = (ImageButton) list_item.findViewById(R.id.user_image);
-            mContainer = (LinearLayout) list_item.findViewById(R.id.item_layout_container);
-            mRetweeted = (TextView) list_item.findViewById(R.id.my_retweeted);
-            mTime = (TextView) list_item.findViewById(R.id.my_time);
+            if (type == TYPE_ITEM){
+                mUser = (TextView) list_item.findViewById(R.id.my_user);
+                mTweet = (TextView) list_item.findViewById(R.id.my_text);
+                mImage = (ImageButton) list_item.findViewById(R.id.my_picture);
+                mProfileImage = (ImageButton) list_item.findViewById(R.id.user_image);
+                mContainer = (LinearLayout) list_item.findViewById(R.id.item_layout_container);
+                mRetweeted = (TextView) list_item.findViewById(R.id.my_retweeted);
+                mTime = (TextView) list_item.findViewById(R.id.my_time);
+                Holderid = 1;
+
+            }else if ( type== TYPE_HEADER){
+                mUser = (TextView) list_item.findViewById(R.id.my_user);
+                mDescription = (TextView) list_item.findViewById(R.id.my_description);
+                mBackground = (ImageView) list_item.findViewById(R.id.ic_background);
+                mProfileImage = (ImageButton) list_item.findViewById(R.id.user_image);
+                mContainer = (LinearLayout) list_item.findViewById(R.id.item_layout_container);
+                mFollowers = (TextView) list_item.findViewById(R.id.my_followers);
+                mFollowing = (TextView) list_item.findViewById(R.id.my_following);
+                mScreenName = (TextView) list_item.findViewById(R.id.my_screename);
+                Holderid = 0;
+            }
+
 
 
         }
     }
 
-    public RealmAdapter(RealmResults<TweetRealm> realmResults, View fragView, int time, ProfileSwitch Activity){
+    public RealmAdapter(RealmResults<TweetRealm> realmResults, View fragView, int time, ProfileSwitch Activity, String profile){
 
         mDataset = realmResults;
         mShortAnimationDuration = time;
         mFragView = fragView;
         mActivity = Activity;
+        mProfileName = profile;
 
     }
 
     @Override
     public RealmAdapter.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        View v = LayoutInflater.from(viewGroup.getContext())
-                .inflate(R.layout.text_layout, viewGroup, false);
 
-        return new ViewHolder(v);
+        if (i == TYPE_HEADER){
+            View v = LayoutInflater.from(viewGroup.getContext())
+                    .inflate(R.layout.profile_card, viewGroup, false);
+            return new ViewHolder(v, i);
+        }else if(i == TYPE_ITEM){
+            View v = LayoutInflater.from(viewGroup.getContext())
+                    .inflate(R.layout.text_layout, viewGroup, false);
+            return new ViewHolder(v, i);
+        }
+
+
+        return null;
     }
 
     @Override
-    public void onBindViewHolder(final RealmAdapter.ViewHolder viewHolder, final int i) {
-        String user_img = mDataset.get(i).getProfileImageUrl();
-        final String user_screen = mDataset.get(i).getScreename();
-        String media_url = mDataset.get(i).getMediaUrl();
-        Date created = mDataset.get(i).getDate();
-        boolean retweeted = mDataset.get(i).isRetweetedStatus();
-        String original = mDataset.get(i).getRetweetedBy();
-        String username = mDataset.get(i).getName();
-        String text = mDataset.get(i).getText();
-        final long tId = mDataset.get(i).getId();
+    public void onBindViewHolder(final RealmAdapter.ViewHolder viewHolder, int i) {
 
-
-        //Load Profile Image
-        Picasso.with(viewHolder.mProfileImage.getContext()).load(user_img).transform(new CircleTransform()).into(
-                viewHolder.mProfileImage
-        );
-
-        //Set profile image to go to the users profile
-        viewHolder.mProfileImage.setOnClickListener( new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                mActivity.swapToProfile(user_screen);
+        if(viewHolder.Holderid == TYPE_ITEM){
+            if(mProfileName != null){
+                i--;
             }
-        });
+            String user_img = mDataset.get(i).getProfileImageUrl();
+            final String user_screen = mDataset.get(i).getScreename();
+            String media_url = mDataset.get(i).getMediaUrl();
+            Date created = mDataset.get(i).getDate();
+            boolean retweeted = mDataset.get(i).isRetweetedStatus();
+            String original = mDataset.get(i).getRetweetedBy();
+            String username = mDataset.get(i).getName();
+            String text = mDataset.get(i).getText();
+            final long tId = mDataset.get(i).getId();
 
-        final String imageUrl = media_url;
-        ViewGroup.LayoutParams params =  viewHolder.mImage.getLayoutParams();
 
-        //Set Cropped Media image and zoomImage animation
-        if (!imageUrl.equals("null")){
-
-            viewHolder.mImage.getLayoutParams().height = 400;
-            Picasso.with(viewHolder.mImage.getContext()).load(imageUrl).fit().centerCrop().into(
-                    viewHolder.mImage
+            //Load Profile Image
+            Picasso.with(viewHolder.mProfileImage.getContext()).load(user_img).transform(new CircleTransform()).into(
+                    viewHolder.mProfileImage
             );
 
-            viewHolder.mImage.setOnClickListener( new View.OnClickListener() {
+            //Set profile image to go to the users profile
+            viewHolder.mProfileImage.setOnClickListener( new View.OnClickListener() {
 
                 @Override
                 public void onClick(View v) {
-                    zoomImageFromThumb(viewHolder.mImage, mFragView, imageUrl);
-
+                    mActivity.swapToProfile(user_screen);
                 }
             });
-        } else {
-            //Media is not need so it is hidden.
-            viewHolder.mImage.setImageDrawable(null);
 
-            viewHolder.mImage.getLayoutParams().height = 0;
+            final String imageUrl = media_url;
+            ViewGroup.LayoutParams params =  viewHolder.mImage.getLayoutParams();
 
-        }
+            //Set Cropped Media image and zoomImage animation
+            if (!imageUrl.equals("null")){
 
-        String retweetText = "";
+                viewHolder.mImage.getLayoutParams().height = 400;
+                Picasso.with(viewHolder.mImage.getContext()).load(imageUrl).fit().centerCrop().into(
+                        viewHolder.mImage
+                );
 
-        //Set "Retweeted By " Text
-        if (retweeted){
-            viewHolder.mRetweeted.setVisibility(View.VISIBLE);
-            retweetText = "Retweeted by @";
-            retweetText += original;
-            viewHolder.mRetweeted.setText(retweetText);
-        }else {
-            viewHolder.mRetweeted.setText(null);
-            viewHolder.mRetweeted.setVisibility(View.GONE);
-        }
+                viewHolder.mImage.setOnClickListener( new View.OnClickListener() {
 
-        //Set Username Text Field
-        Calendar cal = Calendar.getInstance();
-        viewHolder.mTime.setText(DateUtils.getRelativeTimeSpanString(created.getTime()));
-        viewHolder.mUser.setText(username);
-        String tweetText = text;
+                    @Override
+                    public void onClick(View v) {
+                        zoomImageFromThumb(viewHolder.mImage, mFragView, imageUrl);
 
-        //Highlight Profile names/hashtags and their clickable spans
-        ArrayList<int[]> hashtagSpans = getSpans(tweetText, '#');
-        ArrayList<int[]> profileSpans = getSpans(tweetText, '@');
+                    }
+                });
+            } else {
+                //Media is not need so it is hidden.
+                viewHolder.mImage.setImageDrawable(null);
 
-        SpannableString tweetContent = new SpannableString(tweetText);
-
-        for( int j = 0; j < profileSpans.size(); j ++){
-            int[] span = profileSpans.get(j);
-            int profileStart = span[0];
-            int profileEnd = span[1];
-
-            tweetContent.setSpan(new ProfileLink(viewHolder.mTweet.getContext(), mActivity),
-                    profileStart, profileEnd, 0);
-        }
-        viewHolder.mTweet.setMovementMethod(LinkMovementMethod.getInstance());
-        viewHolder.mTweet.setText(tweetContent);
-
-        View.OnClickListener detailTweet =  new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                mActivity.swapToTweet(tId);
-
-
+                viewHolder.mImage.getLayoutParams().height = 0;
 
             }
-        };
-        viewHolder.mTweet.setOnClickListener( detailTweet );
-        viewHolder.mUser.setOnClickListener( detailTweet );
+
+            String retweetText = "";
+
+            //Set "Retweeted By " Text
+            if (retweeted){
+                viewHolder.mRetweeted.setVisibility(View.VISIBLE);
+                retweetText = "Retweeted by @";
+                retweetText += original;
+                viewHolder.mRetweeted.setText(retweetText);
+            }else {
+                viewHolder.mRetweeted.setText(null);
+                viewHolder.mRetweeted.setVisibility(View.GONE);
+            }
+
+            //Set Username Text Field
+            Calendar cal = Calendar.getInstance();
+            viewHolder.mTime.setText(DateUtils.getRelativeTimeSpanString(created.getTime()));
+            viewHolder.mUser.setText(username);
+            String tweetText = text;
+
+            //Highlight Profile names/hashtags and their clickable spans
+            ArrayList<int[]> hashtagSpans = getSpans(tweetText, '#');
+            ArrayList<int[]> profileSpans = getSpans(tweetText, '@');
+
+            SpannableString tweetContent = new SpannableString(tweetText);
+
+            for( int j = 0; j < profileSpans.size(); j ++){
+                int[] span = profileSpans.get(j);
+                int profileStart = span[0];
+                int profileEnd = span[1];
+
+                tweetContent.setSpan(new ProfileLink(viewHolder.mTweet.getContext(), mActivity),
+                        profileStart, profileEnd, 0);
+            }
+            viewHolder.mTweet.setMovementMethod(LinkMovementMethod.getInstance());
+            viewHolder.mTweet.setText(tweetContent);
+
+            View.OnClickListener detailTweet =  new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    mActivity.swapToTweet(tId);
+
+
+
+                }
+            };
+            viewHolder.mTweet.setOnClickListener( detailTweet );
+            viewHolder.mUser.setOnClickListener( detailTweet );
         /*
         setAnimation(viewHolder.mContainer, i);
         */
+
+        }else if (viewHolder.Holderid == TYPE_HEADER){
+
+            Twitter.getApiClient().getSearchService().tweets("from:" + mProfileName, null,null,null,null,10,null,null,null,null,new Callback<Search>() {
+                @Override
+                public void success(Result<Search> searchResult) {
+                    List<Tweet> results = searchResult.data.tweets;
+                    for(int i = 0; i < results.size(); i++){
+                        if(results.get(i).user.screenName.equals(mProfileName)){
+                            User mProfile = results.get(i).user;
+                            Picasso.with(viewHolder.mProfileImage.getContext()).load(mProfile.profileImageUrl).transform(new CircleTransform()).into(
+                                    viewHolder.mProfileImage
+                            );
+                            Picasso.with(viewHolder.mBackground.getContext()).load(mProfile.profileBannerUrl)
+                                    .resize(viewHolder.mBackground.getWidth(), viewHolder.mBackground.getHeight()).into(
+                                    viewHolder.mBackground
+                            );
+                            viewHolder.mDescription.setText(mProfile.description);
+                            viewHolder.mUser.setText(mProfile.name);
+                            viewHolder.mScreenName.setText("@"+mProfile.screenName);
+                            viewHolder.mFollowers.setText("Followers: " + mProfile.followersCount);
+                            viewHolder.mFollowing.setText("Following: " + mProfile.friendsCount);
+
+                            break;
+                        }
+                    }
+                }
+
+                @Override
+                public void failure(TwitterException e) {
+
+                }
+            });
+
+        }
+
 
     }
 
     @Override
     public int getItemCount() {
-        return mDataset.size();
+        if (mProfileName != null){
+            return mDataset.size() + 1;
+        }else{
+            return mDataset.size();
+        }
 
+
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if (isPositionHeader(position) && mProfileName != null){
+            return TYPE_HEADER;
+        }
+        return TYPE_ITEM;
+    }
+
+    private boolean isPositionHeader(int position) {
+        return position == 0;
     }
     public RealmResults<TweetRealm> getRealmResults() {
         return mDataset;

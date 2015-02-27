@@ -27,36 +27,36 @@ import me.jreilly.JamesTweet.R;
  */
 public class NavAdapter extends RecyclerView.Adapter<NavAdapter.ViewHolder> {
 
-private String[] mDataset;
-private Context mContext;
-private String mName;
-private String mProfileUrl;
-private int currentPosition;
+    private String[] mDataset;
+    private Context mContext;
+    private String mName;
+    private String mProfileUrl;
+    private int currentPosition;
 
-private static final int TYPE_HEADER = 0;  // Declaring Variable to Understand which View is being worked on
-    // IF the view under inflation and population is header or Item
+    private static final int TYPE_HEADER = 0;  // Declaring Variable to Understand which View is being worked on
+        // IF the view under inflation and population is header or Item
     private static final int TYPE_ITEM = 1;
 
-public static class ViewHolder extends RecyclerView.ViewHolder {
-    public TextView mRowText;
-    public ImageView mRowIcon;
-    public int Holderid;
-    public ImageView mBackground;
-    public ViewHolder(View v, int type){
-        super(v);
-        if (type == TYPE_ITEM){
-            mRowText = (TextView) v.findViewById(R.id.rowText);
-            mRowIcon = (ImageView) v.findViewById(R.id.rowIcon);
-            Holderid = 1;
-        } else{
-            mRowText = (TextView) v.findViewById(R.id.rowText);
-            mRowIcon = (ImageView) v.findViewById(R.id.rowIcon);
-            mBackground = (ImageView) v.findViewById(R.id.ic_background);
-            Holderid = 0;
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        public TextView mRowText;
+        public ImageView mRowIcon;
+        public int Holderid;
+        public ImageView mBackground;
+        public ViewHolder(View v, int type){
+            super(v);
+            if (type == TYPE_ITEM){
+                mRowText = (TextView) v.findViewById(R.id.rowText);
+                mRowIcon = (ImageView) v.findViewById(R.id.rowIcon);
+                Holderid = 1;
+            } else{
+                mRowText = (TextView) v.findViewById(R.id.rowText);
+                mRowIcon = (ImageView) v.findViewById(R.id.rowIcon);
+                mBackground = (ImageView) v.findViewById(R.id.ic_background);
+                Holderid = 0;
+            }
+
+
         }
-
-
-    }
 }
 
     public NavAdapter(String[] myDataset, Context context, String p, String pUrl){
@@ -107,7 +107,7 @@ public static class ViewHolder extends RecyclerView.ViewHolder {
                 @Override
                 public void success(Result<User> userResult) {
                     Picasso.with(viewHolder.mBackground.getContext()).load(userResult.data.profileBannerUrl)
-                            .resize(viewHolder.mBackground.getMeasuredWidth(), viewHolder.mBackground.getMeasuredHeight()).into(
+                            .resize(viewHolder.mBackground.getWidth(), viewHolder.mBackground.getHeight()).into(
                             viewHolder.mBackground
                     );
                     Picasso.with(viewHolder.mRowIcon.getContext()).load(userResult.data.profileImageUrl).transform(new CircleTransform()).into(
@@ -131,8 +131,10 @@ public static class ViewHolder extends RecyclerView.ViewHolder {
     }
     @Override
     public int getItemViewType(int position) {
-        if (isPositionHeader(position))
+        if (isPositionHeader(position)){
             return TYPE_HEADER;
+        }
+
 
         return TYPE_ITEM;
     }
