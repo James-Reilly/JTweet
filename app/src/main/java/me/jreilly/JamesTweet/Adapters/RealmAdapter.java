@@ -5,10 +5,10 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -33,14 +33,11 @@ import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterException;
-import com.twitter.sdk.android.core.models.Search;
-import com.twitter.sdk.android.core.models.Tweet;
 import com.twitter.sdk.android.core.models.User;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,6 +46,7 @@ import me.jreilly.JamesTweet.Models.TweetRealm;
 import me.jreilly.JamesTweet.R;
 import me.jreilly.JamesTweet.TweetParsers.ProfileLink;
 import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
+import retrofit.RestAdapter;
 
 /**
  * Created by jamesreilly on 2/24/15.
@@ -73,6 +71,8 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
     boolean mNetwork;
     private Context context;
 
+    RestAdapter mRestAdpater;
+
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView mTweet;
@@ -89,6 +89,7 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
         public TextView mDescription;
         public ImageView mBackground;
         public TextView mScreenName;
+        public LinearLayout mTextUnderlay;
 
         public int Holderid;
 
@@ -117,6 +118,7 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
                 mFollowers = (TextView) list_item.findViewById(R.id.my_followers);
                 mFollowing = (TextView) list_item.findViewById(R.id.my_following);
                 mScreenName = (TextView) list_item.findViewById(R.id.my_screename);
+                mTextUnderlay = (LinearLayout) list_item.findViewById(R.id.linear_back);
                 Holderid = 0;
             }
 
@@ -132,6 +134,9 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
         mFragView = fragView;
         mActivity = Activity;
         mProfileName = profile;
+        mRestAdpater = new RestAdapter.Builder()
+                .setEndpoint("https://api.twitter.com")
+                .build();
 
     }
 
@@ -265,29 +270,27 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
 
         }else if (viewHolder.Holderid == TYPE_HEADER){
 
-            Twitter.getApiClient().getSearchService().tweets("from:" + mProfileName, null,null,null,null,10,null,null,null,null,new Callback<Search>() {
-                @Override
-                public void success(Result<Search> searchResult) {
-                    List<Tweet> results = searchResult.data.tweets;
-                    for(int i = 0; i < results.size(); i++){
-                        if(results.get(i).user.screenName.equals(mProfileName)){
-                            User mProfile = results.get(i).user;
-                            Picasso.with(viewHolder.mProfileImage.getContext()).load(mProfile.profileImageUrl).transform(new CircleTransform()).into(
-                                    viewHolder.mProfileImage
-                            );
-                            Picasso.with(viewHolder.mBackground.getContext()).load(mProfile.profileBannerUrl)
-                                    .resize(viewHolder.mBackground.getWidth(), viewHolder.mBackground.getHeight()).into(
-                                    viewHolder.mBackground
-                            );
-                            viewHolder.mDescription.setText(mProfile.description);
-                            viewHolder.mUser.setText(mProfile.name);
-                            viewHolder.mScreenName.setText("@"+mProfile.screenName);
-                            viewHolder.mFollowers.setText("Followers: " + mProfile.followersCount);
-                            viewHolder.mFollowing.setText("Following: " + mProfile.friendsCount);
 
-                            break;
-                        }
-                    }
+            MyTwitterApiClient test  = new MyTwitterApiClient(Twitter.getSessionManager().getActiveSession());
+            test.getCustomService().show(mProfileName, new Callback<User>() {
+                @Override
+                public void success(Result<User> results) {
+                    User mProfile = results.data;
+
+                    Picasso.with(viewHolder.mProfileImage.getContext()).load(mProfile.profileImageUrl).transform(new CircleTransform()).into(
+                            viewHolder.mProfileImage
+                    );
+                    Picasso.with(viewHolder.mBackground.getContext()).load(mProfile.profileBannerUrl)
+                            .resize(viewHolder.mBackground.getWidth(), viewHolder.mBackground.getHeight()).into(
+                            viewHolder.mBackground
+                    );
+                    viewHolder.mDescription.setText(mProfile.description);
+                    viewHolder.mUser.setText(mProfile.name);
+                    viewHolder.mScreenName.setText("@"+mProfile.screenName);
+                    viewHolder.mFollowers.setText("Followers: " + mProfile.followersCount);
+                    viewHolder.mFollowing.setText("Following: " + mProfile.friendsCount);
+                    viewHolder.mTextUnderlay.setBackgroundColor(Color.parseColor("#AA333333"));
+
                 }
 
                 @Override
@@ -295,6 +298,10 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
 
                 }
             });
+
+
+
+
 
         }
 
@@ -533,4 +540,9 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
             return "circle";
         }
     }
+
+
+
+    // example users/show service endpoint
+
 }

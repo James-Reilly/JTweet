@@ -15,7 +15,6 @@ import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterException;
-import com.twitter.sdk.android.core.models.Search;
 import com.twitter.sdk.android.core.models.Tweet;
 import com.twitter.sdk.android.core.models.User;
 import com.twitter.sdk.android.core.services.StatusesService;
@@ -132,11 +131,11 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
 
                 List<Tweet> list = listResult.data;
                 Realm realm = Realm.getInstance(getActivity(), "profile.realm");
-                Log.v("Tester 1", list.toString());
+
 
                 for (Tweet t : list) {
                     try {
-                        Log.v("Tester 1", t.text);
+
                         insertToRealm(t);
                     }catch (Exception te) { Log.e("NEW CONTEXT", "Exception: " + te);}
 
@@ -153,7 +152,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
 
 
                 result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
-                Log.v("Test", result.toString());
+
 
                 int curSize = result.size();
                 if(curSize > rowLimit){
@@ -172,7 +171,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
                 mSwipeRefreshLayout.setRefreshing(false);
 
 
-                Log.v("NEW CONTEXT", "All done!");
+
 
 
 

@@ -18,9 +18,11 @@ import android.view.View;
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterAuthConfig;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.models.User;
 
+import io.fabric.sdk.android.Fabric;
 import me.jreilly.JamesTweet.Adapters.NavAdapter;
 
 
@@ -40,6 +42,8 @@ public class DashActivity extends ActionBarActivity{
 
     String mUsername = "Test";
     String mprofileUrl;
+    private static final String TWITTER_KEY = "u3rtb2wblcZAS4SxsSwx4fcb5";
+    private static final String TWITTER_SECRET = "NoT5fueZXHwRRnka9l0glPyojXtw64z5bnOd0RJlObSEKfkH4H";
 
     /*String Array of the navigation drawer items */
     String[] navItems = {
@@ -54,6 +58,8 @@ public class DashActivity extends ActionBarActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
+        Fabric.with(this, new Twitter(authConfig));
         setContentView(R.layout.activity_main);
         Long uId = Twitter.getSessionManager().getActiveSession().getUserId();
         Twitter.getApiClient().getAccountService().verifyCredentials(true, null, new Callback<User>() {

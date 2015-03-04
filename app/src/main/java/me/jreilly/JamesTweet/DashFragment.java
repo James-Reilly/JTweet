@@ -95,6 +95,8 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
                              Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
+
+
         //Inflate the Recyclerview
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_timeline);
 
@@ -111,7 +113,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
 
 
 
-        //Realm Test Code!
+
 
 
 
@@ -168,6 +170,8 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         return Realm.getInstance(this.getActivity());
     }
 
+
+
     public void insertToRealm(Tweet t){
         Realm realm = Realm.getInstance(this.getActivity());
 
@@ -218,10 +222,8 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         {
 
 
-            //instantiate adapter
 
-            //instantiate receiver class for finding out when new updates are available
-
+            //Instantiate General Use CallBack the inserts Tweets into the database
             mCallBack = new Callback<List<Tweet>>() {
                 @Override
                 public void success(Result<List<Tweet>> listResult) {

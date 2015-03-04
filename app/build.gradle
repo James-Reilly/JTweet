@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId "me.jreilly.recylerviewtest"
-        minSdkVersion 15
+        minSdkVersion 17
         targetSdkVersion 21
         versionCode 1
         versionName "1.0"
