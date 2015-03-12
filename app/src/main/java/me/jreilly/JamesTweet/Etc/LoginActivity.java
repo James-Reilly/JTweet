@@ -1,4 +1,4 @@
-package me.jreilly.JamesTweet;
+package me.jreilly.JamesTweet.Etc;
 
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
@@ -15,6 +15,8 @@ import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
 import io.fabric.sdk.android.Fabric;
+import me.jreilly.JamesTweet.Dashboard.DashActivity;
+import me.jreilly.JamesTweet.R;
 
 
 public class LoginActivity extends ActionBarActivity {

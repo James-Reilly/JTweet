@@ -1,14 +1,15 @@
-package me.jreilly.JamesTweet;
+package me.jreilly.JamesTweet.Etc;
 
 import android.graphics.Point;
 import android.view.Display;
-import android.view.Window;
 import android.view.WindowManager;
+
+import me.jreilly.JamesTweet.Etc.ComposeActivity;
 
 /**
  * Created by jreilly on 1/21/15.
  */
-public class PopupActivity extends  ComposeActivity{
+public class PopupActivity extends ComposeActivity {
     @Override
     public void setUpWindow() {
 

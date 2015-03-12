@@ -1,4 +1,4 @@
-package me.jreilly.JamesTweet;
+package me.jreilly.JamesTweet.Dashboard;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -24,6 +24,9 @@ import com.twitter.sdk.android.core.models.User;
 
 import io.fabric.sdk.android.Fabric;
 import me.jreilly.JamesTweet.Adapters.NavAdapter;
+import me.jreilly.JamesTweet.Etc.DividerItemDecoration;
+import me.jreilly.JamesTweet.Profile.ProfileActivity;
+import me.jreilly.JamesTweet.R;
 
 
 public class DashActivity extends ActionBarActivity{

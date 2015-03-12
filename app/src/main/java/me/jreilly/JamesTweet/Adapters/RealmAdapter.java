@@ -73,6 +73,8 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
 
     RestAdapter mRestAdpater;
 
+    private User mUser;
+
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView mTweet;
@@ -92,6 +94,8 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
         public LinearLayout mTextUnderlay;
 
         public int Holderid;
+
+
 
 
 
@@ -137,6 +141,7 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
         mRestAdpater = new RestAdapter.Builder()
                 .setEndpoint("https://api.twitter.com")
                 .build();
+
 
     }
 
@@ -271,6 +276,8 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
         }else if (viewHolder.Holderid == TYPE_HEADER){
 
 
+
+
             MyTwitterApiClient test  = new MyTwitterApiClient(Twitter.getSessionManager().getActiveSession());
             test.getCustomService().show(mProfileName, new Callback<User>() {
                 @Override
@@ -310,10 +317,12 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
 
     @Override
     public int getItemCount() {
-        if (mProfileName != null){
+        if (mProfileName != null && mDataset != null){
             return mDataset.size() + 1;
-        }else{
+        }else if (mDataset != null){
             return mDataset.size();
+        }else{
+            return 0;
         }
 
 

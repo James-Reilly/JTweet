@@ -1,4 +1,4 @@
-package me.jreilly.JamesTweet;
+package me.jreilly.JamesTweet.Etc;
 
 import android.app.Activity;
 import android.content.Context;
@@ -34,6 +34,7 @@ import com.twitter.sdk.android.core.models.Tweet;
 import com.twitter.sdk.android.core.models.User;
 
 import me.jreilly.JamesTweet.Adapters.MyTwitterApiClient;
+import me.jreilly.JamesTweet.R;
 
 public class ComposeActivity extends Activity {
 

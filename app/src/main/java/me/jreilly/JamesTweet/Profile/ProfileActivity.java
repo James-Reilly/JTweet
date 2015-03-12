@@ -1,10 +1,11 @@
-package me.jreilly.JamesTweet;
+package me.jreilly.JamesTweet.Profile;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import me.jreilly.JamesTweet.R;
 
 /**
  * Created by jreilly on 1/19/15.

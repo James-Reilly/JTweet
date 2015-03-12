@@ -1,11 +1,8 @@
-package me.jreilly.JamesTweet;
+package me.jreilly.JamesTweet.Dashboard;
 
 
 import android.app.Fragment;
-import android.content.BroadcastReceiver;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -14,7 +11,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 
 import com.melnykov.fab.FloatingActionButton;
@@ -28,14 +24,17 @@ import com.twitter.sdk.android.core.services.StatusesService;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
 import me.jreilly.JamesTweet.Adapters.RealmAdapter;
+import me.jreilly.JamesTweet.Etc.ComposeActivity;
 import me.jreilly.JamesTweet.Models.TweetRealm;
+import me.jreilly.JamesTweet.Profile.ProfileActivity;
+import me.jreilly.JamesTweet.R;
+import me.jreilly.JamesTweet.TweetView.TweetActivity;
 import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 
 
@@ -44,47 +43,34 @@ import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
  */
 public class DashFragment extends android.support.v4.app.Fragment implements ProfileSwitch {
 
+    /** The RecyclerView to store the tweets */
     private RecyclerView mRecyclerView;
+    /** The Layout manager for the RecyclerView */
     private RecyclerView.LayoutManager mLayoutManager;
-    private ArrayList<Tweet> mTweetObjects = new ArrayList<>();
+    /** Stores the layout to detect pull down to refresh  */
     private SwipeRefreshLayout mSwipeRefreshLayout;
-
+    /** The LOG_TAG for all the log calls in the fragment */
     private final String LOG_TAG = "DashFragment";
+    /** Temporary variable for saying max # items in the timeline. Will eventually be in settings */
     private int mMaxItems = 100;
-
+    /** The Floating Action Button that floats above the timeline */
     private FloatingActionButton mFab;
-
+    /** The PopUp window used for compose tweet */
     private PopupWindow popUp;
-    private LinearLayout mainLayout;
-
-
-
-    /*variables for the timeline database and reciever */
-    private TweetDataHelper mHelper;
-    private SQLiteDatabase mTimelineDB;
-    private Cursor mCursor;
-    private Cursor mCursorAdapter;
+    /** The Adpater for the RecylerView */
     private RealmAdapter mTweetAdapter;
-    private BroadcastReceiver mTweetReciever;
-
-
-    /*variables for the timeline queue */
-
-    private boolean newPosts = false;
-
-
-    /*Variables for updating the timeline */
+    /** Stores an instance of timeline updates that gets tweets and store them in the Realm */
     private TimelineUpdater mTimelineUpdater;
-
+    /** Stores the callback used for getting tweets */
     private Callback<List<Tweet>> mCallBack;
-
-
-    /*Variables for the adapter */
+    /** Stroes the data of the animation duration for the adapter*/
     private int mShortAnimationDuration;
+    /** Stores the data of the rootView for many function */
     private View fragView;
+    /**Stores the fragment used in the profile switch class */
     private ProfileSwitch mFragment;
-
-    RealmResults<TweetRealm> mDataset;
+    /** Stores the tweets to be displayed in the recylerview*/
+    private RealmResults<TweetRealm> mDataset;
 
 
     public DashFragment() {
@@ -95,29 +81,17 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
                              Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-
-
         //Inflate the Recyclerview
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_timeline);
 
-        //Initilize the Classes that refresh the timeline and extend the timeline on scrolling;
 
-
-
-
-        //Initialize Variables for Adapter and (ProfileSwitch)
-        fragView = rootView;
+        //Set Variables needed for the RealmAdapter and (ProfileSwitch)
         mFragment = this;
         mShortAnimationDuration = getResources().getInteger(
                 android.R.integer.config_shortAnimTime);
+        fragView = rootView;
 
-
-
-
-
-
-
-
+        setFab(rootView);
 
         //Enable pull down to refresh
         mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.fragment_main_swipe_refresh_layout);
@@ -130,40 +104,58 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
 
         });
 
-        //Initialize the layout to a LinearLayout
-        mLayoutManager = new LinearLayoutManager(getActivity());
-        mRecyclerView.setLayoutManager(mLayoutManager);
-
-        popUp = new PopupWindow(getActivity());
-
-        mFab = (FloatingActionButton) rootView.findViewById(R.id.fab);
-        mFab.setVisibility(View.VISIBLE);
-        mFab.attachToRecyclerView(mRecyclerView);
-        mFab.hide();
-        mFab.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-
-                Intent intent = new Intent(getActivity(), ComposeActivity.class);
-                mFab.hide();
-                startActivity(intent);
-
-
-
-            }
-        });
-
-
-        //Sets up the timeline with a DB and a cursor
-        //It also sets up the service
+        //Does the rest of the timeline initialization
         setupTimeline();
 
-        //Allows endless scrolling (theoretically)
-
-
-
         return rootView;
+    }
+
+    /**
+     setupTimeline()
+    Initializes many of the data structures needed for this fragment to work.
+
+     */
+    public void setupTimeline() {
+        try{
+
+            //Initialize the layout to a LinearLayout
+            mLayoutManager = new LinearLayoutManager(getActivity());
+            mRecyclerView.setLayoutManager(mLayoutManager);
+
+            //Initialize Compose Tweet Window
+            popUp = new PopupWindow(getActivity());
+
+            //Instantiate the RealmAdpater for the Recyclerview
+            mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, null);
+
+            //apply the adapter to the timeline view
+            //this will make it populate the new update data in the view
+            mRecyclerView.setAdapter(mTweetAdapter);
+
+            //Instantiate the Timeline Updater
+            mTimelineUpdater = new TimelineUpdater();
+
+            //Instantiate General Use CallBack the inserts Tweets into the database
+            mCallBack = generateCallback();
+            mDataset = getTweets();
+
+            //Run to get the current tweeets
+            mTimelineUpdater.run();
+
+            //Instantiate the RealmAdpater for the Recyclerview
+            mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, null);
+
+            //apply the adapter to the timeline view
+            //this will make it populate the new update data in the view
+            mRecyclerView.setAdapter(mTweetAdapter);
+
+            //Instantiate the Timeline Updater
+            mTimelineUpdater = new TimelineUpdater();
+
+            Log.e(LOG_TAG, "Finished Setup!");
+
+        }
+        catch(Exception te) { Log.e(LOG_TAG, "Failed to fetch timeline: "+te.getMessage()); }
     }
 
     public Realm getRealm(){
@@ -171,7 +163,11 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     }
 
 
-
+    /**
+     * insertToRealm()
+     * @param t Tweet to be inserted into the realm
+     * Adds the specified tweet into the realm
+     */
     public void insertToRealm(Tweet t){
         Realm realm = Realm.getInstance(this.getActivity());
 
@@ -211,93 +207,11 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     }
 
     /**
-    setupTimeline()
-
-     Initializes the database helper, the database, the TweetAdapter to fill the Recycler view,
-     and intializes the The Tweet Service which collects new tweets every 5 minutes.
+     * swapToProfile(String uId)
+     * @param uId
+     * Takes in the profile id (screen_name) of the desired profile to switch to
+     * It then switches the to profile activity of the requested user
      */
-    public void setupTimeline() {
-
-        try
-        {
-
-
-
-            //Instantiate General Use CallBack the inserts Tweets into the database
-            mCallBack = new Callback<List<Tweet>>() {
-                @Override
-                public void success(Result<List<Tweet>> listResult) {
-
-                    List<Tweet> list = listResult.data;
-                    Realm realm = Realm.getInstance(getActivity());
-
-                    for (Tweet t : list) {
-                        try {
-                            insertToRealm(t);
-                        }catch (Exception te) { Log.e("NEW CONTEXT", "Exception: " + te);}
-
-                    }
-
-
-
-
-                    int rowLimit = 50;
-
-
-
-                    RealmResults<TweetRealm> result = realm.where(TweetRealm.class).findAll();
-
-                    result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
-                    int curSize = result.size();
-                    if(curSize > rowLimit){
-                        while(curSize > rowLimit){
-                            realm.beginTransaction();
-                            result.get(result.size()-1).removeFromRealm();
-                            realm.commitTransaction();
-                            curSize--;
-                        }
-                        result = realm.where(TweetRealm.class).findAll();
-                        result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
-                    }
-
-                    mDataset = result;
-                    mRecyclerView.getAdapter().notifyDataSetChanged();
-                    mSwipeRefreshLayout.setRefreshing(false);
-
-
-                    Log.v("NEW CONTEXT", "All done!");
-
-
-
-                }
-
-                @Override
-                public void failure(TwitterException e) {
-                    Log.e("NEW CONTEXT", "Exception " + e);
-
-                }
-            };
-            Realm realm = getRealm();
-            RealmResults<TweetRealm> result = realm.where(TweetRealm.class).findAll();
-            result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
-
-            mDataset = result;
-            mTimelineUpdater = new TimelineUpdater();
-            mTimelineUpdater.run();
-            mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, null );
-
-            //apply the adapter to the timeline view
-            //this will make it populate the new update data in the view
-            mRecyclerView.setAdapter(mTweetAdapter);
-
-
-
-
-            Log.e(LOG_TAG, "Finished Setup!");
-
-        }
-        catch(Exception te) { Log.e(LOG_TAG, "Failed to fetch timeline: "+te.getMessage()); }
-    }
 
     public void swapToProfile(String uId){
         Intent intent = new Intent(getActivity(), ProfileActivity.class)
@@ -306,6 +220,12 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         startActivity(intent);
     }
 
+    /**
+     * swapToTweet(long tweetId)
+     * @param tweetId
+     * Starts the TweetActivity with the tweet of the
+     * specified ID.
+     */
     public void swapToTweet(long tweetId){
         Intent intent = new Intent(getActivity(), TweetActivity.class)
                 .putExtra(TweetActivity.TWEET_KEY, tweetId);
@@ -321,6 +241,94 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         getRealm().close();
 
     }
+
+    /**
+     * getTweets()
+     * @return RealmResults<TweetRealm> The sorted list of tweets
+     * Querys the realm of this activity for tweets
+     * and sorts the data by the data
+    */
+    public RealmResults<TweetRealm> getTweets(){
+        Realm realm = getRealm();
+        RealmResults<TweetRealm> result = realm.where(TweetRealm.class).findAll();
+        result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
+        return result;
+    }
+
+    /**
+     * Callback<List<Tweet>>()
+     * @return A Callback that adds a list of tweets to a realm database on success
+     * Generates a callback to add tweets to the local real database
+     *
+     */
+
+    public Callback<List<Tweet>> generateCallback(){
+        return new Callback<List<Tweet>>() {
+            @Override
+            public void success(Result<List<Tweet>> listResult) {
+
+                List<Tweet> list = listResult.data;
+                Realm realm = Realm.getInstance(getActivity());
+
+                for (Tweet t : list) {
+                    try {
+                        insertToRealm(t);
+                    }catch (Exception te) {
+                        mSwipeRefreshLayout.setRefreshing(false);
+                        Log.e(LOG_TAG, "Exception: " + te);}
+                }
+                int rowLimit = 50;
+                RealmResults<TweetRealm> result = realm.where(TweetRealm.class).findAll();
+                result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
+                int curSize = result.size();
+                if(curSize > rowLimit){
+                    while(curSize > rowLimit){
+                        realm.beginTransaction();
+                        result.get(result.size()-1).removeFromRealm();
+                        realm.commitTransaction();
+                        curSize--;
+                    }
+                    result = realm.where(TweetRealm.class).findAll();
+                    result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
+                }
+                mDataset = result;
+                mRecyclerView.getAdapter().notifyDataSetChanged();
+                mSwipeRefreshLayout.setRefreshing(false);
+
+                Log.v("NEW CONTEXT", "All done!");
+
+
+            }
+            @Override
+            public void failure(TwitterException e) {
+                Log.e("NEW CONTEXT", "Exception " + e);
+
+            }
+        };
+    }
+
+    /**
+     * setFab()
+     * @param rootView
+     * Initializes the fab the rootView
+     */
+
+    public void setFab(View rootView){
+        mFab = (FloatingActionButton) rootView.findViewById(R.id.fab);
+        mFab.setVisibility(View.VISIBLE);
+        mFab.attachToRecyclerView(mRecyclerView);
+        mFab.hide();
+        mFab.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), ComposeActivity.class);
+                mFab.hide();
+                startActivity(intent);
+            }
+        });
+    }
+
 
 
 

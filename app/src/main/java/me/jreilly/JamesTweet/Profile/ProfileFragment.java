@@ -1,4 +1,4 @@
-package me.jreilly.JamesTweet;
+package me.jreilly.JamesTweet.Profile;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -30,6 +30,8 @@ import io.realm.Realm;
 import io.realm.RealmResults;
 import me.jreilly.JamesTweet.Adapters.RealmAdapter;
 import me.jreilly.JamesTweet.Models.TweetRealm;
+import me.jreilly.JamesTweet.R;
+import me.jreilly.JamesTweet.TweetView.TweetActivity;
 import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 
 
@@ -100,6 +102,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_timeline);
+
 
         //Variables for Adapter
         fragView = rootView;
@@ -191,7 +194,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
         result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
         mDataset = result;
         getTweets(true);
-        mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, mUserId );
+        mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, mUserId);
 
         //apply the adapter to the timeline view
         //this will make it populate the new update data in the view

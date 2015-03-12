@@ -1,4 +1,4 @@
-package me.jreilly.JamesTweet;
+package me.jreilly.JamesTweet.Etc;
 
 import android.content.Context;
 import android.content.res.TypedArray;

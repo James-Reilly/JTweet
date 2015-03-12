@@ -11,11 +11,11 @@
         android:label="@string/app_name"
         android:theme="@style/CustomActionBarTheme" >
         <activity
-            android:name=".DashActivity"
+            android:name=".Dashboard.DashActivity"
             android:label="@string/app_name" >
         </activity>
         <activity
-            android:name=".ProfileActivity"
+            android:name=".Profile.ProfileActivity"
             android:label="@string/app_name" >
         </activity>
 
@@ -24,7 +24,7 @@
             android:value="9223035ce240f9ecc0ba6de792ad7def453bccf7" />
 
         <activity
-            android:name=".LoginActivity"
+            android:name=".Etc.LoginActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -36,11 +36,11 @@
         <service android:name=".TimelineService" />
 
         <activity
-            android:name=".TweetActivity"
+            android:name=".TweetView.TweetActivity"
             android:label="@string/title_activity_tweet" >
         </activity>
         <activity
-            android:name=".ComposeActivity"
+            android:name=".Etc.ComposeActivity"
             android:label="@string/title_activity_compose"
             android:theme="@style/Theme.FloatingWindow.Popup"
             android:configChanges="orientation|screenSize"
