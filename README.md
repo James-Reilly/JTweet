@@ -1,7 +1,7 @@
 # JTweet
-A Twitter Application for Android
-[Visit my website to follow the progress of this application!](http://jreilly.me/)
-**Current Features**
+####A Twitter Application for Android
+[Visit my website to follow the progress of this application!](http://jreilly.me/) 
+#####Current Features
 * Basic timeline that includes pictures
 * Pictures in tweets are cropped and will zoom when clicked
 * Profile views with profile card at the begging to display user information
@@ -10,7 +10,7 @@ A Twitter Application for Android
 * Detailed tweet view that allows user to retweet favorite and reply
 * Floating action button to enable user to tweet
 
-**To-Do**
+#####To-Do
 * Search feature
 * Enable Hashtag detection
 * Add features like follow and unfollw to profile views
