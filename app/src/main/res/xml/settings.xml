@@ -18,7 +18,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <Preference
         android:key="pref_key_sms_delete_limit"
-        android:dependency="pref_key_auto_delete"
+
         android:summary="@string/pref_summary_max_tweets"
         android:title="@string/pref_title_max_tweets"/>
 </PreferenceScreen>

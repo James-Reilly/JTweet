@@ -17,6 +17,11 @@ package me.jreilly.JamesTweet.Etc;
 
 import android.app.Application;
 import android.content.Context;
+import com.crashlytics.android.Crashlytics;
+import com.twitter.sdk.android.Twitter;
+import com.twitter.sdk.android.core.TwitterAuthConfig;
+
+import io.fabric.sdk.android.Fabric;
 
 /**
  * Created by jreilly on 1/13/15.
@@ -25,9 +30,18 @@ public class TweetTweet extends Application {
     private static TweetTweet mInstance;
     private static Context mAppContext;
 
+    private static final String TWITTER_KEY = "0uHL6HeVjnkKnRgw4QtFGUt0c";
+    private static final String TWITTER_SECRET = "eA9rAd6tCbeWcmMhYvPG7Oo5BejcRItnZP0lYO4xv99QmjemCb";
+
     @Override
     public void onCreate() {
         super.onCreate();
+
+        TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
+
+
+        Fabric.with(this, new Twitter(authConfig));
+        Fabric.with(this, new Crashlytics());
         mInstance = this;
 
         this.setAppContext(getApplicationContext());

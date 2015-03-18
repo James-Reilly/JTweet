@@ -30,6 +30,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.crashlytics.android.Crashlytics;
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
@@ -66,8 +67,8 @@ public class DashActivity extends ActionBarActivity{
     String mprofileUrl;
 
     // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
-    private static final String TWITTER_KEY = "u3rtb2wblcZAS4SxsSwx4fcb5";
-    private static final String TWITTER_SECRET = "NoT5fueZXHwRRnka9l0glPyojXtw64z5bnOd0RJlObSEKfkH4H";
+    private static final String TWITTER_KEY = "0uHL6HeVjnkKnRgw4QtFGUt0c";
+    private static final String TWITTER_SECRET = "eA9rAd6tCbeWcmMhYvPG7Oo5BejcRItnZP0lYO4xv99QmjemCb";
 
     /*String Array of the navigation drawer items */
     String[] navItems = {
@@ -86,6 +87,7 @@ public class DashActivity extends ActionBarActivity{
         //Initialize Fabric on create
         TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
         Fabric.with(this, new Twitter(authConfig));
+        Fabric.with(this, new Crashlytics());
         //SetContentView
         setContentView(R.layout.activity_main);
         //Get the current users information

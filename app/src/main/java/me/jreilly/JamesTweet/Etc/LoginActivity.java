@@ -18,9 +18,11 @@ package me.jreilly.JamesTweet.Etc;
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.crashlytics.android.Crashlytics;
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
@@ -36,19 +38,23 @@ import me.jreilly.JamesTweet.R;
 
 public class LoginActivity extends ActionBarActivity {
     TwitterLoginButton mLoginButton;
-    private static final String TWITTER_KEY = "u3rtb2wblcZAS4SxsSwx4fcb5";
-    private static final String TWITTER_SECRET = "NoT5fueZXHwRRnka9l0glPyojXtw64z5bnOd0RJlObSEKfkH4H";
+    private static final String TWITTER_KEY = "0uHL6HeVjnkKnRgw4QtFGUt0c";
+    private static final String TWITTER_SECRET = "eA9rAd6tCbeWcmMhYvPG7Oo5BejcRItnZP0lYO4xv99QmjemCb";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //Fabric Authentication
         TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
 
+
         Fabric.with(this, new Twitter(authConfig));
+        Fabric.with(this, new Crashlytics());
+
         //Set Login View
         setContentView(R.layout.activity_login);
 
         //Check if there is a current session and skip to dashboard if there is
+
         TwitterSession session = Twitter.getSessionManager().getActiveSession();
         if (session != null){
             startDashboard();
