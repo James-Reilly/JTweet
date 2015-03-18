@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2013 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package me.jreilly.JamesTweet.Dashboard;
 
 
@@ -39,7 +54,8 @@ import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 
 
 /**
- * A simple {@link Fragment} subclass.
+ * DashFragment
+ * A fragment to store the main timeline of the newsfeed
  */
 public class DashFragment extends android.support.v4.app.Fragment implements ProfileSwitch {
 
@@ -111,9 +127,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     }
 
     /**
-     setupTimeline()
-    Initializes many of the data structures needed for this fragment to work.
-
+     *  Initializes many of the data structures needed for this fragment to work.
      */
     public void setupTimeline() {
         try{
@@ -164,7 +178,6 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
 
 
     /**
-     * insertToRealm()
      * @param t Tweet to be inserted into the realm
      * Adds the specified tweet into the realm
      */
@@ -207,7 +220,6 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     }
 
     /**
-     * swapToProfile(String uId)
      * @param uId
      * Takes in the profile id (screen_name) of the desired profile to switch to
      * It then switches the to profile activity of the requested user
@@ -221,7 +233,6 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     }
 
     /**
-     * swapToTweet(long tweetId)
      * @param tweetId
      * Starts the TweetActivity with the tweet of the
      * specified ID.
@@ -243,7 +254,6 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     }
 
     /**
-     * getTweets()
      * @return RealmResults<TweetRealm> The sorted list of tweets
      * Querys the realm of this activity for tweets
      * and sorts the data by the data
@@ -256,12 +266,9 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     }
 
     /**
-     * Callback<List<Tweet>>()
      * @return A Callback that adds a list of tweets to a realm database on success
      * Generates a callback to add tweets to the local real database
-     *
      */
-
     public Callback<List<Tweet>> generateCallback(){
         return new Callback<List<Tweet>>() {
             @Override
@@ -308,11 +315,9 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     }
 
     /**
-     * setFab()
      * @param rootView
      * Initializes the fab the rootView
      */
-
     public void setFab(View rootView){
         mFab = (FloatingActionButton) rootView.findViewById(R.id.fab);
         mFab.setVisibility(View.VISIBLE);
@@ -351,8 +356,10 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         }
     }
 
-
-
+    /**
+     * A class used for detecting the end of a recyclerview to load more data to repopluate the
+     * view to simulate a endless list
+     */
     public abstract class EndlessRecyclerOnScrollListener extends RecyclerView.OnScrollListener {
         private int previousToral = 0;
         private boolean loading = true;

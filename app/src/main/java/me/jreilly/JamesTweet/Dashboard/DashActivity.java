@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2013 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package me.jreilly.JamesTweet.Dashboard;
 
 import android.app.Activity;
@@ -25,13 +40,17 @@ import com.twitter.sdk.android.core.models.User;
 import io.fabric.sdk.android.Fabric;
 import me.jreilly.JamesTweet.Adapters.NavAdapter;
 import me.jreilly.JamesTweet.Etc.DividerItemDecoration;
+import me.jreilly.JamesTweet.Etc.SettingsActivity;
 import me.jreilly.JamesTweet.Profile.ProfileActivity;
 import me.jreilly.JamesTweet.R;
 
+/**
+ * The main activity of the app.  It includes a navigation drawer to switch between features
+ * It defaults to the timeline fragment (DashFragment)
+ */
 
 public class DashActivity extends ActionBarActivity{
 
-    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
 
     private Toolbar toolbar;
     RecyclerView mDrawerView;
@@ -43,8 +62,10 @@ public class DashActivity extends ActionBarActivity{
 
     ActionBarDrawerToggle mDrawerToggle;
 
-    String mUsername = "Test";
+    String mUsername;
     String mprofileUrl;
+
+    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
     private static final String TWITTER_KEY = "u3rtb2wblcZAS4SxsSwx4fcb5";
     private static final String TWITTER_SECRET = "NoT5fueZXHwRRnka9l0glPyojXtw64z5bnOd0RJlObSEKfkH4H";
 
@@ -61,10 +82,13 @@ public class DashActivity extends ActionBarActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //Initialize Fabric on create
         TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
         Fabric.with(this, new Twitter(authConfig));
+        //SetContentView
         setContentView(R.layout.activity_main);
-        Long uId = Twitter.getSessionManager().getActiveSession().getUserId();
+        //Get the current users information
         Twitter.getApiClient().getAccountService().verifyCredentials(true, null, new Callback<User>() {
             @Override
             public void success(Result<User> userResult) {
@@ -79,28 +103,48 @@ public class DashActivity extends ActionBarActivity{
 
             }
         });
+        //Initialize the navigation drawer
+        initDrawer();
+        //Start the dashboard fragment
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.content_frame, new DashFragment())
+                    .commit();
+        }
 
-        //Setting the navigation drawer
+
+        //Set Support ActionBar
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mDrawerView = (RecyclerView) findViewById(R.id.left_drawer);
-        mDrawerView.setHasFixedSize(true);
 
+
+    }
+
+    /**
+     * Initializes the navigation drawer and its contents
+     */
+    public void initDrawer(){
+        //Find the view id
+        mDrawerView = (RecyclerView) findViewById(R.id.left_drawer);
+        //Drawer size is fixed
+        mDrawerView.setHasFixedSize(true);
+        //Add List Dividers
         mDrawerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
 
-
+        //Initialize the Nav Adapter to populate the drawer
         mAdapter = new NavAdapter(navItems, this, mUsername, mprofileUrl);
         mActivity = this;
         mDrawerView.setAdapter(mAdapter);
 
         //Detect swipe to open navigation drawer
         final GestureDetector mGestureDetector = new GestureDetector(DashActivity.this, new GestureDetector.SimpleOnGestureListener(){
-           @Override
-           public boolean onSingleTapUp(MotionEvent e){
-               return true;
-           }
+            @Override
+            public boolean onSingleTapUp(MotionEvent e){
+                return true;
+            }
         });
 
+        //Detect Item CLicks and respond accordingly
         mDrawerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
 
             @Override
@@ -110,17 +154,12 @@ public class DashActivity extends ActionBarActivity{
                 if (child != null && mGestureDetector.onTouchEvent(e)){
 
                     if(rv.getChildPosition(child) == 0){
-                        //Get Screen name of User
-                        String uId = Twitter.getSessionManager().getActiveSession().getUserName();
-                        //
-
-                        Intent intent = new Intent(mActivity, ProfileActivity.class)
-                                .putExtra(ProfileActivity.PROFILE_KEY, uId);
-                        startActivity(intent);
+                        swapToProfile();
                     } else if (navItems[rv.getChildPosition(child) - 1].equals("Timeline")){
-                        mDrawer.closeDrawers();
-                        getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.content_frame, new DashFragment()).commit();
+                        swapToTimeline();
+                    } else if (navItems[rv.getChildPosition(child) - 1].equals("Settings")){
+                        Intent intent = new Intent(mActivity, SettingsActivity.class);
+                        startActivity(intent);
                     }
                     return true;
                 }
@@ -151,12 +190,27 @@ public class DashActivity extends ActionBarActivity{
         mDrawer.setDrawerListener(mDrawerToggle);
         mDrawerToggle.syncState();
 
-        if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.content_frame, new DashFragment())
-                    .commit();
-        }
 
+    }
+
+    /**
+     * starts the profile activity of the current users profile
+     */
+    public void swapToProfile(){
+        //Get Screen name of User
+        String uId = Twitter.getSessionManager().getActiveSession().getUserName();
+        Intent intent = new Intent(mActivity, ProfileActivity.class)
+                .putExtra(ProfileActivity.PROFILE_KEY, uId);
+        startActivity(intent);
+    }
+
+    /**
+     * Swaps the fragment of the Activity to the current users DashFragment (timeline)
+     */
+    public void swapToTimeline(){
+        mDrawer.closeDrawers();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.content_frame, new DashFragment()).commit();
     }
 
 
@@ -166,7 +220,6 @@ public class DashActivity extends ActionBarActivity{
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
-
         return true;
     }
 

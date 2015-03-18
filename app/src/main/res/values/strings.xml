@@ -10,5 +10,9 @@
     <string name="closeDrawer">Close!</string>
     <string name="title_activity_tweet">TweetActivity</string>
     <string name="title_activity_compose">Compose</string>
+    <string name="pref_summary_max_tweets">Maximum number of tweets to be stored locally
+        on the device</string>
+    <string name="pref_title_max_tweets">Max Tweets</string>
+    <string name="title_activity_settings">SettingsActivity</string>
 
 </resources>

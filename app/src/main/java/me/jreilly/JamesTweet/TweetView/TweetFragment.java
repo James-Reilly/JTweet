@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2013 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package me.jreilly.JamesTweet.TweetView;
 
 import android.content.Intent;
@@ -43,9 +58,7 @@ import me.jreilly.JamesTweet.TweetParsers.ProfileLink;
 import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 
 /**
- * TweetFragment
  * Created by jreilly on 1/19/15.
- *
  * The Fragment of the detail of the Tweet given
  */
 public class TweetFragment extends android.support.v4.app.Fragment implements ProfileSwitch {
@@ -130,11 +143,9 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
     }
 
     /**
-     * setUpTweetLayout
      * Sets all the visual elements of the detail view of the tweet using the private variable
      * mTweetId
      */
-
     public void setUpTweetLayout(){
         Twitter.getApiClient().getStatusesService().show(mTweetId, null, true, true, new Callback<Tweet>() {
             @Override
@@ -239,15 +250,12 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
     }
 
     /**
-     * getSpans)()
      * @param body The text to span
      * @param prefix The symbol at the beggining of the span
      * @return The clickable spans
-     *
-     * Sets the lcickable spans for any prefix
+     * Sets the clickable spans for any prefix
      * (This program uses it for @ strings and # strings
      */
-
     public ArrayList<int[]> getSpans(String body, char prefix) {
         ArrayList<int[]> spans = new ArrayList<int[]>();
 
@@ -267,11 +275,9 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
 
 
     /**
-     * getReplies()
      * @param id The id of the tweet to get replies to
      * @param num_left number of depths left to search
      * @param first if the first tweet in the reply search
-     *
      * Gets the replies to a tweet recursively
      */
     public void getReplies(long id, final int num_left, final boolean first){
@@ -300,7 +306,6 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
     }
 
     /**
-     * insertToRealm()
      * @param t Tweet to be inserted into the realm
      * Adds the specified tweet into the realm
      */
@@ -343,7 +348,6 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
     }
 
     /**
-     * setFavoriteButton()
      * sets the clickListener for the favorite button
      */
     public void setFavoriteButton(){
@@ -400,7 +404,6 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
     }
 
     /**
-     * setRetweeteButton()
      * sets the clickListener for the retweet button
      */
     public void setRetweetButton(){
@@ -457,7 +460,10 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
         });
     }
 
-
+    /**
+     * @param uId The ID of the profile to switch to
+     * Starts the ProfileActivity with the uID passed as the intent
+     */
     public void swapToProfile(String uId){
         Intent intent = new Intent(getActivity(), ProfileActivity.class)
                 .putExtra(ProfileActivity.PROFILE_KEY, uId);
@@ -465,6 +471,10 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
         getActivity().finish();
     }
 
+    /**
+     * @param tweetId The ID of the tweet to show
+     * Starts the TweetActivity with the tweetID passed as the intent
+     */
     public void swapToTweet(long tweetId){
         Intent intent = new Intent(getActivity(), TweetActivity.class)
                 .putExtra(TweetActivity.TWEET_KEY, tweetId);
