@@ -109,7 +109,7 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
 
 
         View rootView = inflater.inflate(R.layout.fragment_tweet, container, false);
-        //Get objects to set
+        //Get Visuals to set
         mUser = (TextView) rootView.findViewById(R.id.tweet_user);
         mTweet = (TextView) rootView.findViewById(R.id.tweet_text);
         mImage = (ImageButton) rootView.findViewById(R.id.tweet_picture);
@@ -118,28 +118,54 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
         mRetweetButton = (ImageButton) rootView.findViewById(R.id.tweet_retweet_button);
         mFavoriteButton = (ImageButton) rootView.findViewById(R.id.tweet_favorite_button);
 
+        //private variable to use to switch to other profiles
         mActivity = (ProfileSwitch) getActivity();
 
+        //Setup the layout
         setUpTweetLayout();
 
+        //Initializeg the RecyclerView to hold the replies
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_replies);
 
-        //Variables for Adapter
+        //Initialize variables for the adapter
         fragView = rootView;
         mFragment = this;
         mShortAnimationDuration = getResources().getInteger(
                 android.R.integer.config_shortAnimTime);
-
         mLayoutManager = new LinearLayoutManager(getActivity());
-
         mRecyclerView.setLayoutManager(mLayoutManager);
 
+        //Clear the database, etc.
+        setUpRealm();
+        //get at max 15 replies from tweet and populate data
+        getReplies(mTweetId, 15, true);
+        //initialize the RealmAdapter for the tweet
         mAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, null);
+        //Set the adapter to the recyclerview
         mRecyclerView.setAdapter(mAdapter);
 
-        getReplies(mTweetId, 15, true);
 
         return rootView;
+    }
+
+
+    /**
+     * Sets the realm up for the use of the fragment
+     * It clears the database and assigns the database the data for the adapter
+     */
+    public void setUpRealm(){
+        //Get the tweet reply realm
+        Realm realm = Realm.getInstance(this.getActivity(), "tweet.realm");
+        //Clear the Database from previous tweets
+        realm.beginTransaction();
+        realm.clear(TweetRealm.class);
+        realm.commitTransaction();
+        //Get Database
+        RealmResults<TweetRealm> result = realm.where(TweetRealm.class).findAll();
+        //Sort by date
+        result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
+        //Assignt to the adapters dataset
+        mDataset = result;
     }
 
     /**
@@ -292,6 +318,7 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
                 }
 
                 if(tweetResult.data.inReplyToStatusIdStr != null && num_left > 0){
+                    Log.v(LOG_TAG,tweetResult.data.text);
                     getReplies(tweetResult.data.inReplyToStatusId, num_left - 1, false);
 
                 }
@@ -311,40 +338,48 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
      */
     public void insertToRealm(Tweet t){
         Realm realm = Realm.getInstance(this.getActivity(), "tweet.realm");
-
         realm.beginTransaction();
+        try{
 
 
 
-        TweetRealm tweet = realm.createObject(TweetRealm.class);
-        String dateString = t.createdAt;
-        DateFormat format = new SimpleDateFormat("EEE MMM dd kk:mm:ss ZZZZZ yyyy");
-        Date date;
-        try {
-            date = format.parse(dateString);
-            tweet.setDate(date);
-        } catch (ParseException e) {
+            TweetRealm tweet = realm.createObject(TweetRealm.class);
+            String dateString = t.createdAt;
+            DateFormat format = new SimpleDateFormat("EEE MMM dd kk:mm:ss ZZZZZ yyyy");
+            Date date;
+            try {
+                date = format.parse(dateString);
+                tweet.setDate(date);
+            } catch (ParseException e) {
+                Log.e(LOG_TAG, "Error: " + e);
+            }
+            tweet.setRetweetedBy(t.user.screenName);
+            tweet.setOriginalId(t.id);
+            if(t.retweetedStatus != null){
+                t = t.retweetedStatus;
+                tweet.setRetweetedStatus(true);
+            }else{
+                tweet.setRetweetedStatus(false);
+            }
+            tweet.setProfileImageUrl(t.user.profileImageUrl);
+            tweet.setId(t.id);
+            tweet.setName(t.user.name);
+            tweet.setScreename(t.user.screenName);
+            tweet.setText(t.text);
+            if(t.entities != null && t.entities.media != null){
+                tweet.setMediaUrl(t.entities.media.get(0).mediaUrl);
+            }else{
+                tweet.setMediaUrl("null");
+            }
+            realm.commitTransaction();
+
+        } catch (Exception e){
+            realm.cancelTransaction();
+
             Log.e(LOG_TAG, "Error: " + e);
         }
-        tweet.setRetweetedBy(t.user.screenName);
-        tweet.setOriginalId(t.id);
-        if(t.retweetedStatus != null){
-            t = t.retweetedStatus;
-            tweet.setRetweetedStatus(true);
-        }else{
-            tweet.setRetweetedStatus(false);
-        }
-        tweet.setProfileImageUrl(t.user.profileImageUrl);
-        tweet.setId(t.id);
-        tweet.setName(t.user.name);
-        tweet.setScreename(t.user.screenName);
-        tweet.setText(t.text);
-        if(t.entities != null && t.entities.media != null){
-            tweet.setMediaUrl(t.entities.media.get(0).mediaUrl);
-        }else{
-            tweet.setMediaUrl("null");
-        }
-        realm.commitTransaction();
+
+
     }
 
     /**
