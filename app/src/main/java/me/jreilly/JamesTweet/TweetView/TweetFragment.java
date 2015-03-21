@@ -17,7 +17,6 @@ package me.jreilly.JamesTweet.TweetView;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.SpannableString;
@@ -38,19 +37,15 @@ import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.models.Tweet;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 
 import io.realm.Realm;
 import io.realm.RealmResults;
 import me.jreilly.JamesTweet.Adapters.RealmAdapter;
 import me.jreilly.JamesTweet.Etc.ComposeActivity;
+import me.jreilly.JamesTweet.Models.RealmHelper;
 import me.jreilly.JamesTweet.Models.TweetRealm;
 import me.jreilly.JamesTweet.Profile.ProfileActivity;
 import me.jreilly.JamesTweet.R;
@@ -63,6 +58,7 @@ import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
  */
 public class TweetFragment extends android.support.v4.app.Fragment implements ProfileSwitch {
 
+    /** Variable to hold the visual objects that need to be filled */
     private long mTweetId;
     private TextView mTweet;
     private TextView mUser;
@@ -72,19 +68,15 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
     private ImageButton mRetweetButton;
     private ImageButton mFavoriteButton;
 
+    /** Variables to hold the data for the RecyclerView */
     private ProfileSwitch mActivity;
-
     private RecyclerView mRecyclerView;
-    private RealmAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
-    private ArrayList<Tweet> mTweetObjects = new ArrayList<>();
-    private SwipeRefreshLayout mSwipeRefreshLayout;
+
+    /**Vairables for the Realm */
+    private RealmAdapter mAdapter;
     private RealmResults<TweetRealm> mDataset;
-
-    private int mShortAnimationDuration;
-    private View fragView;
-    private ProfileSwitch mFragment;
-
+    private RealmHelper mRealmHelper;
 
     private final String LOG_TAG = "TweetFragment";
     public TweetFragment() {
@@ -124,26 +116,28 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
         //Setup the layout
         setUpTweetLayout();
 
-        //Initializeg the RecyclerView to hold the replies
+        //Initialize the RecyclerView to hold the replies
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_replies);
 
-        //Initialize variables for the adapter
-        fragView = rootView;
-        mFragment = this;
-        mShortAnimationDuration = getResources().getInteger(
-                android.R.integer.config_shortAnimTime);
-        mLayoutManager = new LinearLayoutManager(getActivity());
+                mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
 
         //Clear the database, etc.
         setUpRealm();
+
         //get at max 15 replies from tweet and populate data
         getReplies(mTweetId, 15, true);
+
+        //Initialize variables for the adapter
+        ProfileSwitch pFragment = this;
+        int shortAnimationDuration = getResources().getInteger(
+                android.R.integer.config_shortAnimTime);
+
         //initialize the RealmAdapter for the tweet
-        mAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, null);
+        mAdapter = new RealmAdapter(mDataset, rootView, shortAnimationDuration, pFragment, null);
+
         //Set the adapter to the recyclerview
         mRecyclerView.setAdapter(mAdapter);
-
 
         return rootView;
     }
@@ -154,18 +148,16 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
      * It clears the database and assigns the database the data for the adapter
      */
     public void setUpRealm(){
+        //Initialize the helper
+        mRealmHelper = new RealmHelper(this.getActivity(), "tweet.realm");
         //Get the tweet reply realm
-        Realm realm = Realm.getInstance(this.getActivity(), "tweet.realm");
+        Realm realm = mRealmHelper.getRealm();
         //Clear the Database from previous tweets
         realm.beginTransaction();
         realm.clear(TweetRealm.class);
         realm.commitTransaction();
-        //Get Database
-        RealmResults<TweetRealm> result = realm.where(TweetRealm.class).findAll();
-        //Sort by date
-        result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
-        //Assignt to the adapters dataset
-        mDataset = result;
+        //Get sorted tweets
+        mDataset = mRealmHelper.getTweets(15);
     }
 
     /**
@@ -312,19 +304,13 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
             @Override
             public void success(Result<Tweet> tweetResult) {
                 if(!first){
-                    insertToRealm(tweetResult.data);
+                    mRealmHelper.insertToRealm(tweetResult.data);
                     mRecyclerView.getAdapter().notifyDataSetChanged();
-
                 }
-
                 if(tweetResult.data.inReplyToStatusIdStr != null && num_left > 0){
-                    Log.v(LOG_TAG,tweetResult.data.text);
                     getReplies(tweetResult.data.inReplyToStatusId, num_left - 1, false);
-
                 }
-
             }
-
             @Override
             public void failure(TwitterException e) {
                    Log.e(LOG_TAG, "Excpetion: " + e);
@@ -332,55 +318,7 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
         });
     }
 
-    /**
-     * @param t Tweet to be inserted into the realm
-     * Adds the specified tweet into the realm
-     */
-    public void insertToRealm(Tweet t){
-        Realm realm = Realm.getInstance(this.getActivity(), "tweet.realm");
-        realm.beginTransaction();
-        try{
 
-
-
-            TweetRealm tweet = realm.createObject(TweetRealm.class);
-            String dateString = t.createdAt;
-            DateFormat format = new SimpleDateFormat("EEE MMM dd kk:mm:ss ZZZZZ yyyy");
-            Date date;
-            try {
-                date = format.parse(dateString);
-                tweet.setDate(date);
-            } catch (ParseException e) {
-                Log.e(LOG_TAG, "Error: " + e);
-            }
-            tweet.setRetweetedBy(t.user.screenName);
-            tweet.setOriginalId(t.id);
-            if(t.retweetedStatus != null){
-                t = t.retweetedStatus;
-                tweet.setRetweetedStatus(true);
-            }else{
-                tweet.setRetweetedStatus(false);
-            }
-            tweet.setProfileImageUrl(t.user.profileImageUrl);
-            tweet.setId(t.id);
-            tweet.setName(t.user.name);
-            tweet.setScreename(t.user.screenName);
-            tweet.setText(t.text);
-            if(t.entities != null && t.entities.media != null){
-                tweet.setMediaUrl(t.entities.media.get(0).mediaUrl);
-            }else{
-                tweet.setMediaUrl("null");
-            }
-            realm.commitTransaction();
-
-        } catch (Exception e){
-            realm.cancelTransaction();
-
-            Log.e(LOG_TAG, "Error: " + e);
-        }
-
-
-    }
 
     /**
      * sets the clickListener for the favorite button
@@ -514,5 +452,16 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
         Intent intent = new Intent(getActivity(), TweetActivity.class)
                 .putExtra(TweetActivity.TWEET_KEY, tweetId);
         startActivity(intent);
+    }
+    
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Realm realm = mRealmHelper.getRealm();
+        realm.beginTransaction();
+        realm.clear(TweetRealm.class);
+        realm.commitTransaction();
+        realm.close();
+
     }
 }

@@ -44,6 +44,7 @@ import me.jreilly.JamesTweet.Etc.DividerItemDecoration;
 import me.jreilly.JamesTweet.Etc.SettingsActivity;
 import me.jreilly.JamesTweet.Profile.ProfileActivity;
 import me.jreilly.JamesTweet.R;
+import me.jreilly.JamesTweet.UserViews.MentionsFragment;
 
 /**
  * The main activity of the app.  It includes a navigation drawer to switch between features
@@ -159,6 +160,10 @@ public class DashActivity extends ActionBarActivity{
                         swapToProfile();
                     } else if (navItems[rv.getChildPosition(child) - 1].equals("Timeline")){
                         swapToTimeline();
+                    } else if (navItems[rv.getChildPosition(child) - 1].equals("Timeline")){
+                        mDrawer.closeDrawers();
+                        getSupportFragmentManager().beginTransaction()
+                                .replace(R.id.content_frame, new MentionsFragment()).commit();
                     } else if (navItems[rv.getChildPosition(child) - 1].equals("Settings")){
                         Intent intent = new Intent(mActivity, SettingsActivity.class);
                         startActivity(intent);

@@ -34,20 +34,17 @@ import com.twitter.sdk.android.core.models.Tweet;
 import com.twitter.sdk.android.core.models.User;
 import com.twitter.sdk.android.core.services.StatusesService;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
 import me.jreilly.JamesTweet.Adapters.RealmAdapter;
+import me.jreilly.JamesTweet.Models.RealmHelper;
 import me.jreilly.JamesTweet.Models.TweetRealm;
 import me.jreilly.JamesTweet.R;
-import me.jreilly.JamesTweet.TweetView.TweetActivity;
 import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
+import me.jreilly.JamesTweet.TweetView.TweetActivity;
 
 
 public class ProfileFragment extends android.support.v4.app.Fragment implements ProfileSwitch {
@@ -75,6 +72,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
 
     private User mUser;
 
+    private RealmHelper mRealmHelper;
 
 
 
@@ -117,7 +115,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_timeline);
-
+        mRealmHelper = new RealmHelper(this.getActivity(),"profile.realm");
 
         //Variables for Adapter
         fragView = rootView;
@@ -148,78 +146,37 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
             public void success(Result<List<Tweet>> listResult) {
 
                 List<Tweet> list = listResult.data;
-                Realm realm = Realm.getInstance(getActivity(), "profile.realm");
-
-
                 for (Tweet t : list) {
                     try {
-
-                        insertToRealm(t);
-                    }catch (Exception te) { Log.e("NEW CONTEXT", "Exception: " + te);}
-
+                        mRealmHelper.insertToRealm(t);
+                    }catch (Exception te) { Log.e(LOG_TAG, "Exception: " + te);}
                 }
 
-
-
-
-                int rowLimit = 50;
-
-
-
-                RealmResults<TweetRealm> result = realm.where(TweetRealm.class).findAll();
-
-
-                result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
-
-
-                int curSize = result.size();
-                if(curSize > rowLimit){
-                    while(curSize > rowLimit){
-                        realm.beginTransaction();
-                        result.get(result.size()-1).removeFromRealm();
-                        realm.commitTransaction();
-                        curSize--;
-                    }
-                    result = realm.where(TweetRealm.class).findAll();
-                    result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
-                }
-
-                mDataset = result;
+                mDataset = mRealmHelper.getTweets(50);
                 mRecyclerView.getAdapter().notifyDataSetChanged();
                 mSwipeRefreshLayout.setRefreshing(false);
-
-
-
-
-
 
             }
 
             @Override
             public void failure(TwitterException e) {
-                Log.e("NEW CONTEXT", "Exception " + e);
+                Log.e(LOG_TAG, "Exception " + e);
 
             }
         };
-        Realm realm = Realm.getInstance(this.getActivity(), "profile.realm");
+        Realm realm = mRealmHelper.getRealm();
         realm.beginTransaction();
         realm.clear(TweetRealm.class);
         realm.commitTransaction();
         RealmResults<TweetRealm> result = realm.where(TweetRealm.class).findAll();
         result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
-        mDataset = result;
+        mDataset = mRealmHelper.getTweets(50);
         getTweets(true);
         mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, mUserId);
 
         //apply the adapter to the timeline view
         //this will make it populate the new update data in the view
         mRecyclerView.setAdapter(mTweetAdapter);
-
-
-
-
-        Log.e(LOG_TAG, "Finished Setup!");
-
 
         mRecyclerView.setOnScrollListener(
                 new EndlessRecyclerOnScrollListener((LinearLayoutManager)mLayoutManager) {
@@ -253,46 +210,6 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
         return Realm.getInstance(this.getActivity(), "profile.realm");
     }
 
-    public void insertToRealm(Tweet t) {
-        Realm realm = Realm.getInstance(getActivity(), "profile.realm");
-
-        realm.beginTransaction();
-
-
-
-        TweetRealm tweet = realm.createObject(TweetRealm.class);
-        String dateString = t.createdAt;
-        DateFormat format = new SimpleDateFormat("EEE MMM dd kk:mm:ss ZZZZZ yyyy");
-        Date date;
-        try {
-            date = format.parse(dateString);
-            tweet.setDate(date);
-        } catch (ParseException e) {
-            Log.e(LOG_TAG, "Error: " + e);
-        }
-
-        tweet.setRetweetedBy(t.user.screenName);
-        tweet.setOriginalId(t.id);
-        if(t.retweetedStatus != null){
-            t = t.retweetedStatus;
-            tweet.setRetweetedStatus(true);
-        }else{
-            tweet.setRetweetedStatus(false);
-        }
-        tweet.setProfileImageUrl(t.user.profileImageUrl);
-        tweet.setId(t.id);
-        tweet.setName(t.user.name);
-        tweet.setScreename(t.user.screenName);
-        tweet.setText(t.text);
-        if(t.entities != null && t.entities.media != null){
-            tweet.setMediaUrl(t.entities.media.get(0).mediaUrl);
-        }else{
-            tweet.setMediaUrl("null");
-        }
-        realm.commitTransaction();
-    }
-
-
 
 
     public void getTweets(Boolean pageRefresh){
@@ -300,7 +217,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
 
 
         long id;
-        Log.e(LOG_TAG, "Getting Tweets!");
+
         if(mDataset != null && mDataset.size() != 0){
             id = mDataset.get(0).getOriginalId();
 
@@ -314,7 +231,11 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        getRealm().close();
+        Realm realm = mRealmHelper.getRealm();
+        realm.beginTransaction();
+        realm.clear(TweetRealm.class);
+        realm.commitTransaction();
+        realm.close();
 
     }
 

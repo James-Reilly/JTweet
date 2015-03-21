@@ -16,7 +16,6 @@
 package me.jreilly.JamesTweet.Dashboard;
 
 
-import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -46,11 +45,12 @@ import io.realm.Realm;
 import io.realm.RealmResults;
 import me.jreilly.JamesTweet.Adapters.RealmAdapter;
 import me.jreilly.JamesTweet.Etc.ComposeActivity;
+import me.jreilly.JamesTweet.Models.RealmHelper;
 import me.jreilly.JamesTweet.Models.TweetRealm;
 import me.jreilly.JamesTweet.Profile.ProfileActivity;
 import me.jreilly.JamesTweet.R;
-import me.jreilly.JamesTweet.TweetView.TweetActivity;
 import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
+import me.jreilly.JamesTweet.TweetView.TweetActivity;
 
 
 /**
@@ -87,6 +87,11 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     private ProfileSwitch mFragment;
     /** Stores the tweets to be displayed in the recylerview*/
     private RealmResults<TweetRealm> mDataset;
+    /** A helper for Realm functions */
+    private RealmHelper mRealmHelper;
+
+
+
 
 
     public DashFragment() {
@@ -132,6 +137,9 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     public void setupTimeline() {
         try{
 
+            //Initialize the Realm Helper Functions
+            mRealmHelper = new RealmHelper(this.getActivity(), null);
+
             //Initialize the layout to a LinearLayout
             mLayoutManager = new LinearLayoutManager(getActivity());
             mRecyclerView.setLayoutManager(mLayoutManager);
@@ -151,7 +159,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
 
             //Instantiate General Use CallBack the inserts Tweets into the database
             mCallBack = generateCallback();
-            mDataset = getTweets();
+            mDataset = mRealmHelper.getTweets(50);
 
             //Run to get the current tweeets
             mTimelineUpdater.run();
@@ -177,10 +185,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     }
 
 
-    /**
-     * @param t Tweet to be inserted into the realm
-     * Adds the specified tweet into the realm
-     */
+
     public void insertToRealm(Tweet t){
         Realm realm = Realm.getInstance(this.getActivity());
 
@@ -275,30 +280,17 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
             public void success(Result<List<Tweet>> listResult) {
 
                 List<Tweet> list = listResult.data;
-                Realm realm = Realm.getInstance(getActivity());
+                Realm realm = mRealmHelper.getRealm();
 
                 for (Tweet t : list) {
                     try {
-                        insertToRealm(t);
+                        mRealmHelper.insertToRealm(t);
                     }catch (Exception te) {
                         mSwipeRefreshLayout.setRefreshing(false);
                         Log.e(LOG_TAG, "Exception: " + te);}
                 }
-                int rowLimit = 50;
-                RealmResults<TweetRealm> result = realm.where(TweetRealm.class).findAll();
-                result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
-                int curSize = result.size();
-                if(curSize > rowLimit){
-                    while(curSize > rowLimit){
-                        realm.beginTransaction();
-                        result.get(result.size()-1).removeFromRealm();
-                        realm.commitTransaction();
-                        curSize--;
-                    }
-                    result = realm.where(TweetRealm.class).findAll();
-                    result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
-                }
-                mDataset = result;
+
+                mDataset = mRealmHelper.getTweets(50);
                 mRecyclerView.getAdapter().notifyDataSetChanged();
                 mSwipeRefreshLayout.setRefreshing(false);
 
