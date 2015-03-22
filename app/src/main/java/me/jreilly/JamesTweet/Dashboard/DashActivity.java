@@ -44,6 +44,7 @@ import me.jreilly.JamesTweet.Etc.DividerItemDecoration;
 import me.jreilly.JamesTweet.Etc.SettingsActivity;
 import me.jreilly.JamesTweet.Profile.ProfileActivity;
 import me.jreilly.JamesTweet.R;
+import me.jreilly.JamesTweet.UserViews.FavoritesFragment;
 import me.jreilly.JamesTweet.UserViews.MentionsFragment;
 
 /**
@@ -92,9 +93,12 @@ public class DashActivity extends ActionBarActivity{
         //SetContentView
         setContentView(R.layout.activity_main);
         //Get the current users information
+
+
         Twitter.getApiClient().getAccountService().verifyCredentials(true, null, new Callback<User>() {
             @Override
             public void success(Result<User> userResult) {
+
                 mUsername = userResult.data.name;
                 mprofileUrl = userResult.data.profileImageUrl;
                 mAdapter.notifyDataSetChanged();
@@ -160,10 +164,14 @@ public class DashActivity extends ActionBarActivity{
                         swapToProfile();
                     } else if (navItems[rv.getChildPosition(child) - 1].equals("Timeline")){
                         swapToTimeline();
-                    } else if (navItems[rv.getChildPosition(child) - 1].equals("Timeline")){
+                    } else if (navItems[rv.getChildPosition(child) - 1].equals("Mentions")){
                         mDrawer.closeDrawers();
                         getSupportFragmentManager().beginTransaction()
                                 .replace(R.id.content_frame, new MentionsFragment()).commit();
+                    } else if (navItems[rv.getChildPosition(child) - 1].equals("Favorites")) {
+                        mDrawer.closeDrawers();
+                        getSupportFragmentManager().beginTransaction()
+                                .replace(R.id.content_frame, new FavoritesFragment()).commit();
                     } else if (navItems[rv.getChildPosition(child) - 1].equals("Settings")){
                         Intent intent = new Intent(mActivity, SettingsActivity.class);
                         startActivity(intent);

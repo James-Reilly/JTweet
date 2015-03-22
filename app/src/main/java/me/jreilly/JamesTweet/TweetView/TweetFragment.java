@@ -453,7 +453,7 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
                 .putExtra(TweetActivity.TWEET_KEY, tweetId);
         startActivity(intent);
     }
-    
+
     @Override
     public void onDestroy() {
         super.onDestroy();

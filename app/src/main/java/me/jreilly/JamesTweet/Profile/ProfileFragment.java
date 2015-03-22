@@ -114,6 +114,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
                              Bundle savedInstanceState) {
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        this.getActivity().setTitle("Profile");
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_timeline);
         mRealmHelper = new RealmHelper(this.getActivity(),"profile.realm");
 

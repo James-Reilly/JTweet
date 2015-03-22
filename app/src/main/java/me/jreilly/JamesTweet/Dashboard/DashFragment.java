@@ -102,6 +102,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
                              Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
+        this.getActivity().setTitle("Timeline");
         //Inflate the Recyclerview
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_timeline);
 
@@ -335,7 +336,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         @Override
         public void run() {
             long id;
-            Log.e(LOG_TAG, "Getting Tweets!");
+            Log.v(LOG_TAG, "Getting Tweets!");
             if(mDataset != null && mDataset.size() != 0){
                 id = mDataset.get(0).getOriginalId();
                 final StatusesService service = Twitter.getApiClient().getStatusesService();

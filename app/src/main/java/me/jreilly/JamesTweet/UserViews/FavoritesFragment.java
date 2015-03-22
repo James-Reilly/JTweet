@@ -31,7 +31,7 @@ import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.models.Tweet;
-import com.twitter.sdk.android.core.services.StatusesService;
+import com.twitter.sdk.android.core.services.FavoriteService;
 
 import java.util.List;
 
@@ -46,9 +46,9 @@ import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 import me.jreilly.JamesTweet.TweetView.TweetActivity;
 
 /**
- *
+ * Created by jamesreilly on 3/21/15.
  */
-public class MentionsFragment extends android.support.v4.app.Fragment implements ProfileSwitch {
+public class FavoritesFragment extends android.support.v4.app.Fragment implements ProfileSwitch {
 
     private static final String LOG_TAG = "MentionFragment";
 
@@ -61,7 +61,7 @@ public class MentionsFragment extends android.support.v4.app.Fragment implements
     private RecyclerView.LayoutManager mLayoutManager;
 
 
-    public MentionsFragment() {
+    public FavoritesFragment() {
         // Required empty public constructor
     }
 
@@ -76,9 +76,12 @@ public class MentionsFragment extends android.support.v4.app.Fragment implements
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_mentions, container, false);
-        this.getActivity().setTitle("Mentions");
+
+        this.getActivity().setTitle("Favorites");
         //Setup The View
         setupMentions(rootView);
+
+
 
         return rootView;
     }
@@ -87,7 +90,7 @@ public class MentionsFragment extends android.support.v4.app.Fragment implements
         //Hide the Fab From the DashFragment
 
         //Setup Realm Helper methods
-        mRealmHelper = new RealmHelper(this.getActivity(), "mentions.realm");
+        mRealmHelper = new RealmHelper(this.getActivity(), "favorites.realm");
         mDataset = mRealmHelper.getTweets(50);
 
         //Setup timline updater runnable
@@ -171,8 +174,8 @@ public class MentionsFragment extends android.support.v4.app.Fragment implements
 
             if(mDataset != null && mDataset.size() != 0){
                 id = mDataset.get(0).getOriginalId();
-                final StatusesService service = Twitter.getApiClient().getStatusesService();
-                service.mentionsTimeline(50, id, null, null, null, null, new Callback<List<Tweet>>() {
+                final FavoriteService service = Twitter.getApiClient().getFavoriteService();
+                service.list(null, null, 50, null, null, null, new Callback<List<Tweet>>() {
                     @Override
                     public void success(Result<List<Tweet>> listResult) {
                         List<Tweet> list = listResult.data;
@@ -194,8 +197,8 @@ public class MentionsFragment extends android.support.v4.app.Fragment implements
                     }
                 });
             }else{
-                final StatusesService service = Twitter.getApiClient().getStatusesService();
-                service.mentionsTimeline(50, null, null, null, null, null, new Callback<List<Tweet>>() {
+                final FavoriteService service = Twitter.getApiClient().getFavoriteService();
+                service.list(null, null, 50, null, null, null, new Callback<List<Tweet>>() {
                     @Override
                     public void success(Result<List<Tweet>> listResult) {
                         List<Tweet> list = listResult.data;
@@ -218,5 +221,4 @@ public class MentionsFragment extends android.support.v4.app.Fragment implements
             }
         }
     }
-
 }
