@@ -16,9 +16,12 @@
   -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <Preference
-        android:key="pref_key_sms_delete_limit"
-
-        android:summary="@string/pref_summary_max_tweets"
-        android:title="@string/pref_title_max_tweets"/>
+    <ListPreference
+        android:key="pref_type"
+        android:title="# of Tweets"
+        android:summary="Select number of tweets to be stored locally"
+        android:entries="@array/tweets_local"
+        android:entryValues="@array/tweet_local_values"
+        android:defaultValue="50"
+        />
 </PreferenceScreen>
