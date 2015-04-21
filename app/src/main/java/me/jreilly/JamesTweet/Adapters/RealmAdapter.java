@@ -27,6 +27,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.SpannableString;
 import android.text.format.DateUtils;
@@ -77,6 +78,8 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
 
     private ProfileSwitch mActivity;
 
+    private boolean mReplies;
+
     private static final int TYPE_HEADER = 0;  // Declaring Variable to Understand which View is being worked on
     // IF the view under inflation and population is header or Item
     private static final int TYPE_ITEM = 1;
@@ -100,6 +103,7 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
         public TextView mRetweeted;
         public TextView mTime;
 
+        public CardView mCard;
 
         public TextView mFollowers;
         public TextView mFollowing;
@@ -126,6 +130,7 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
                 mContainer = (LinearLayout) list_item.findViewById(R.id.item_layout_container);
                 mRetweeted = (TextView) list_item.findViewById(R.id.my_retweeted);
                 mTime = (TextView) list_item.findViewById(R.id.my_time);
+                mCard = (CardView) list_item.findViewById(R.id.card_view);
                 Holderid = 1;
 
             }else if ( type== TYPE_HEADER){
@@ -146,7 +151,8 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
         }
     }
 
-    public RealmAdapter(RealmResults<TweetRealm> realmResults, View fragView, int time, ProfileSwitch Activity, String profile){
+    public RealmAdapter(RealmResults<TweetRealm> realmResults, View fragView, int time,
+                        ProfileSwitch Activity, String profile, Boolean replies){
 
         mDataset = realmResults;
         mShortAnimationDuration = time;
@@ -156,6 +162,7 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
         mRestAdpater = new RestAdapter.Builder()
                 .setEndpoint("https://api.twitter.com")
                 .build();
+        mReplies = replies;
 
 
     }
@@ -172,7 +179,6 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
                     .inflate(R.layout.text_layout, viewGroup, false);
             return new ViewHolder(v, i);
         }
-
 
         return null;
     }
@@ -276,12 +282,16 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
                 @Override
                 public void onClick(View v) {
 
-                    mActivity.swapToTweet(tId);
-
+                    mActivity.swapToTweet(tId, viewHolder.mCard);
 
 
                 }
             };
+            if(mReplies){
+                viewHolder.mCard.setTransitionName("@transition/no_transition");
+            }
+
+            viewHolder.mCard.setOnClickListener(detailTweet);
             viewHolder.mTweet.setOnClickListener( detailTweet );
             viewHolder.mUser.setOnClickListener( detailTweet );
         /*

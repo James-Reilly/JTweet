@@ -51,6 +51,9 @@ import com.twitter.sdk.android.core.models.User;
 import me.jreilly.JamesTweet.Adapters.MyTwitterApiClient;
 import me.jreilly.JamesTweet.R;
 
+/**
+ * Activity to crate a floating window that allows the user to compose a tweet
+ */
 public class ComposeActivity extends Activity {
 
     public static final String REPLY_USER = "reply_user";
@@ -60,24 +63,25 @@ public class ComposeActivity extends Activity {
     private String mReplyUser = "";
 
 
-
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setUpWindow();
+        //Make sure the actionbar doesnt show on the floating window
         getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
         getActionBar().hide();
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(REPLY_USER) && intent.hasExtra(REPLY_ID)){
+            //Get the screename of the user to reply to
             mReplyUser = intent.getStringExtra(REPLY_USER);
+            //Get the id of the reply?
             mReplyId = intent.getLongExtra(REPLY_ID, 0);
 
         }
+
         setContentView(R.layout.activity_compose);
 
+        //get the visual elements of the window
         final Context context = this;
 
         final EditText tweetText = (EditText) findViewById(R.id.tweetEditText);
@@ -88,7 +92,8 @@ public class ComposeActivity extends Activity {
         Long id = Twitter.getSessionManager().getActiveSession().getUserId();
         MyTwitterApiClient test  = new MyTwitterApiClient(Twitter.getSessionManager().getActiveSession());
 
-
+        //Initilize the character counter to display to the user so they know how many characters
+        // they have left
         final TextWatcher mTextEditorWatcher = new TextWatcher() {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
@@ -120,7 +125,7 @@ public class ComposeActivity extends Activity {
                 Log.v("Compose: ", "Exception " + e);
             }
         });
-
+        //Set click listner that cretaes the tweet
         createTweet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -165,9 +170,11 @@ public class ComposeActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-
+    /**
+     * Creates the layout for the window and initializes the look of it
+     */
     public void setUpWindow() {
-        // Creates the layout for the window and the look of it
+
 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND,
                 WindowManager.LayoutParams.FLAG_DIM_BEHIND);

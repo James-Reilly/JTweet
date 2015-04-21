@@ -18,6 +18,8 @@ package me.jreilly.JamesTweet.Dashboard;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -149,7 +151,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
             popUp = new PopupWindow(getActivity());
 
             //Instantiate the RealmAdpater for the Recyclerview
-            mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, null);
+            mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, null, false);
 
             //apply the adapter to the timeline view
             //this will make it populate the new update data in the view
@@ -166,7 +168,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
             mTimelineUpdater.run();
 
             //Instantiate the RealmAdpater for the Recyclerview
-            mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, null);
+            mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, null, false);
 
             //apply the adapter to the timeline view
             //this will make it populate the new update data in the view
@@ -243,11 +245,19 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
      * Starts the TweetActivity with the tweet of the
      * specified ID.
      */
-    public void swapToTweet(long tweetId){
+    public void swapToTweet(long tweetId, View view){
         Intent intent = new Intent(getActivity(), TweetActivity.class)
-                .putExtra(TweetActivity.TWEET_KEY, tweetId);
+                .putExtra(TweetActivity.TWEET_KEY, tweetId).putExtra(TweetActivity.REALM_KEY, "null");
+        String transitionName = getString(R.transition.transition);
+        Log.v(LOG_TAG, transitionName);
+
+        ActivityOptionsCompat options =
+                ActivityOptionsCompat.makeSceneTransitionAnimation(this.getActivity(),
+                        view,   // The view which starts the transition
+                        transitionName    // The transitionName of the view we’re transitioning to
+                );
         mFab.hide();
-        startActivity(intent);
+        ActivityCompat.startActivity(this.getActivity(), intent, options.toBundle());
     }
 
 

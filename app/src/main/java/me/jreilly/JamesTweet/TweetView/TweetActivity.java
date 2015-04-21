@@ -16,19 +16,24 @@
 package me.jreilly.JamesTweet.TweetView;
 
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import me.jreilly.JamesTweet.Profile.ProfileActivity;
 import me.jreilly.JamesTweet.R;
 import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 
+/**
+ * This is the Activity that holds the detailed view of the selected tweet.
+ */
 public class TweetActivity extends ActionBarActivity implements ProfileSwitch {
 
 
     public static final String TWEET_KEY = "tweet_id";
+    public static final String REALM_KEY = "realm_name";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +76,7 @@ public class TweetActivity extends ActionBarActivity implements ProfileSwitch {
                 .putExtra(ProfileActivity.PROFILE_KEY, uId);
         startActivity(intent);
     }
-    public void swapToTweet(long tweetId){
+    public void swapToTweet(long tweetId, View view){
         Intent intent = new Intent(this, TweetActivity.class)
                 .putExtra(TweetActivity.TWEET_KEY, tweetId);
         startActivity(intent);

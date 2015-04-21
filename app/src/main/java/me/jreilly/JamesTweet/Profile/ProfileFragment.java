@@ -17,6 +17,8 @@ package me.jreilly.JamesTweet.Profile;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -74,17 +76,11 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
 
     private RealmHelper mRealmHelper;
 
-
-
-
     /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
      *
-     *
-     * @return A new instance of fragment ProfileFragment.
+     * @param screenName The Screename of the user being detailed passed as intent
+     * @return The Fragment for the Activity
      */
-    // TODO: Rename and change types and number of parameters
     public static ProfileFragment newInstance(String screenName) {
         ProfileFragment fragment = new ProfileFragment();
         Bundle args = new Bundle();
@@ -125,9 +121,11 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
 
                 android.R.integer.config_shortAnimTime);
 
+        //Hide the floating action buttton
         FloatingActionButton mFab = (FloatingActionButton) rootView.findViewById(R.id.fab);
         mFab.hide();
 
+        //Setup pull down the refresh
         mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.fragment_main_swipe_refresh_layout);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -137,11 +135,11 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
 
         });
 
+        //Set the layout manager
         mLayoutManager = new LinearLayoutManager(getActivity());
-
-
         mRecyclerView.setLayoutManager(mLayoutManager);
 
+        //Create a general callback for getting tweets
         mCallBack = new Callback<List<Tweet>>() {
             @Override
             public void success(Result<List<Tweet>> listResult) {
@@ -165,6 +163,8 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
 
             }
         };
+
+        //Intialize the realm that will store the profiles tweets
         Realm realm = mRealmHelper.getRealm();
         realm.beginTransaction();
         realm.clear(TweetRealm.class);
@@ -173,7 +173,9 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
         result.sort("date", RealmResults.SORT_ORDER_DESCENDING);
         mDataset = mRealmHelper.getTweets(50);
         getTweets(true);
-        mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, mUserId);
+
+        //Intiailize the realm adapter for the recyclerview to display the profiles tweets
+        mTweetAdapter = new RealmAdapter(mDataset, fragView, mShortAnimationDuration, mFragment, mUserId, false);
 
         //apply the adapter to the timeline view
         //this will make it populate the new update data in the view
@@ -202,26 +204,37 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
         getActivity().finish();
     }
 
-    public void swapToTweet(long tweetId){
+    public void swapToTweet(long tweetId, View view){
         Intent intent = new Intent(getActivity(), TweetActivity.class)
-                .putExtra(TweetActivity.TWEET_KEY, tweetId);
-        startActivity(intent);
+                .putExtra(TweetActivity.TWEET_KEY, tweetId).putExtra(TweetActivity.REALM_KEY, "profile.realm");
+        String transitionName = getString(R.transition.transition);
+        Log.v(LOG_TAG, transitionName);
+
+        ActivityOptionsCompat options =
+                ActivityOptionsCompat.makeSceneTransitionAnimation(this.getActivity(),
+                        view,   // The view which starts the transition
+                        transitionName    // The transitionName of the view we’re transitioning to
+                );
+
+        ActivityCompat.startActivity(this.getActivity(), intent, options.toBundle());
     }
     public Realm getRealm(){
         return Realm.getInstance(this.getActivity(), "profile.realm");
     }
 
 
+    /**
+     * Get the tweets from current user
+     * @param pageRefresh Old parameter may bring it back so it goes unused
+     */
 
     public void getTweets(Boolean pageRefresh){
         final StatusesService service = Twitter.getApiClient().getStatusesService();
 
-
         long id;
-
+        //Check if this is a refresh or the intial filling of the database
         if(mDataset != null && mDataset.size() != 0){
             id = mDataset.get(0).getOriginalId();
-
             service.userTimeline(null, mUserId, 50, id, null, null, null,null,null, mCallBack);
         }else{
 
@@ -239,6 +252,11 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
         realm.close();
 
     }
+
+    /**
+     * Class used to implement endless scrolling of the recyclerveiw
+     * Currently goes unused but should return soon
+     */
 
     public abstract class EndlessRecyclerOnScrollListener extends RecyclerView.OnScrollListener {
         private int previousToral = 0;

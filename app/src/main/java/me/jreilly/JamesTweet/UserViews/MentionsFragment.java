@@ -18,6 +18,8 @@ package me.jreilly.JamesTweet.UserViews;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -107,7 +109,7 @@ public class MentionsFragment extends android.support.v4.app.Fragment implements
                 android.R.integer.config_shortAnimTime);
 
         //initialize the RealmAdapter for the tweet
-        mAdapter = new RealmAdapter(mDataset, rootView, shortAnimationDuration, pFragment, null);
+        mAdapter = new RealmAdapter(mDataset, rootView, shortAnimationDuration, pFragment, null, false);
 
         //Set the adapter to the recyclerview
         mRecyclerView.setAdapter(mAdapter);
@@ -145,10 +147,19 @@ public class MentionsFragment extends android.support.v4.app.Fragment implements
      * Starts the TweetActivity with the tweet of the
      * specified ID.
      */
-    public void swapToTweet(long tweetId){
+    public void swapToTweet(long tweetId, View view){
         Intent intent = new Intent(getActivity(), TweetActivity.class)
-                .putExtra(TweetActivity.TWEET_KEY, tweetId);
-        startActivity(intent);
+                .putExtra(TweetActivity.TWEET_KEY, tweetId).putExtra(TweetActivity.REALM_KEY, "mentions.realm");
+        String transitionName = getString(R.transition.transition);
+        Log.v(LOG_TAG, transitionName);
+
+        ActivityOptionsCompat options =
+                ActivityOptionsCompat.makeSceneTransitionAnimation(this.getActivity(),
+                        view,   // The view which starts the transition
+                        transitionName    // The transitionName of the view we’re transitioning to
+                );
+
+        ActivityCompat.startActivity(this.getActivity(), intent, options.toBundle());
     }
 
     @Override

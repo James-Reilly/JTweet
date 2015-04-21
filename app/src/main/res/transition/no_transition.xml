@@ -15,13 +15,6 @@
   ~ limitations under the License.
   -->
 
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <ListPreference
-        android:key="pref_type"
-        android:title="# of Tweets"
-        android:summary="Select number of tweets to be stored locally"
-        android:entries="@array/tweet_local"
-        android:entryValues="@array/tweet_local_values"
-        android:defaultValue="50"
-        />
-</PreferenceScreen>
+<transitionSet xmlns:android="http://schemas.android.com/apk/res/android">
+
+</transitionSet>

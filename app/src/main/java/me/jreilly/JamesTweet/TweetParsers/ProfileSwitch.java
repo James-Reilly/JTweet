@@ -15,11 +15,13 @@
  */
 package me.jreilly.JamesTweet.TweetParsers;
 
+import android.view.View;
+
 /**
  * Created by jreilly on 1/17/15.
  */
 
 public interface ProfileSwitch {
     public void swapToProfile(String uId);
-    public void swapToTweet(long tId);
+    public void swapToTweet(long tId, View view);
 }

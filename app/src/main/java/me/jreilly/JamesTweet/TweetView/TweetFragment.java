@@ -16,10 +16,17 @@
 package me.jreilly.JamesTweet.TweetView;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.SpannableString;
+import android.text.format.DateUtils;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,6 +37,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Transformation;
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
@@ -38,6 +46,8 @@ import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.models.Tweet;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,6 +65,7 @@ import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 /**
  * Created by jreilly on 1/19/15.
  * The Fragment of the detail of the Tweet given
+ * It is passed the tweet ID and the name of the Realm database the tweet is stored in the intent
  */
 public class TweetFragment extends android.support.v4.app.Fragment implements ProfileSwitch {
 
@@ -62,6 +73,7 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
     private long mTweetId;
     private TextView mTweet;
     private TextView mUser;
+    private TextView mDate;
     private ImageButton mImage;
     private ImageButton mProfileImage;
     private ImageButton mReplyButton;
@@ -78,6 +90,8 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
     private RealmResults<TweetRealm> mDataset;
     private RealmHelper mRealmHelper;
 
+    private String mRealmLoc;
+
     private final String LOG_TAG = "TweetFragment";
     public TweetFragment() {
 
@@ -87,8 +101,11 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
         super.onCreate(savedInstanceState);
         Intent intent = getActivity().getIntent();
         if (intent != null && intent.hasExtra(TweetActivity.TWEET_KEY)){
-
+            //Get the ID of the tweet to be displayed
             mTweetId = intent.getLongExtra(TweetActivity.TWEET_KEY, 0);
+
+            //Get the database in which this tweet is stored
+            mRealmLoc = intent.getStringExtra(TweetActivity.REALM_KEY);
             Log.v(LOG_TAG, "Got Tweet id: " + mTweetId);
 
         }
@@ -102,10 +119,11 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
 
         View rootView = inflater.inflate(R.layout.fragment_tweet, container, false);
         //Get Visuals to set
-        mUser = (TextView) rootView.findViewById(R.id.tweet_user);
-        mTweet = (TextView) rootView.findViewById(R.id.tweet_text);
-        mImage = (ImageButton) rootView.findViewById(R.id.tweet_picture);
-        mProfileImage = (ImageButton) rootView.findViewById(R.id.tweet_user_image);
+        mUser = (TextView) rootView.findViewById(R.id.my_user);
+        mTweet = (TextView) rootView.findViewById(R.id.my_text);
+        mImage = (ImageButton) rootView.findViewById(R.id.my_picture);
+        mDate = (TextView) rootView.findViewById(R.id.my_time);
+        mProfileImage = (ImageButton) rootView.findViewById(R.id.user_image);
         mReplyButton = (ImageButton) rootView.findViewById(R.id.tweet_reply_button);
         mRetweetButton = (ImageButton) rootView.findViewById(R.id.tweet_retweet_button);
         mFavoriteButton = (ImageButton) rootView.findViewById(R.id.tweet_favorite_button);
@@ -113,7 +131,21 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
         //private variable to use to switch to other profiles
         mActivity = (ProfileSwitch) getActivity();
 
-        //Setup the layout
+        //Get the database that is storing the tweet to be accessed
+        Realm realm;
+        if(mRealmLoc.equals("null")){
+            realm  = Realm.getInstance(this.getActivity());
+        }else{
+            realm = Realm.getInstance(this.getActivity(), mRealmLoc);
+        }
+
+        //Query the database for the selected tweet
+        RealmResults<TweetRealm> result = realm.where(TweetRealm.class).equalTo("id", mTweetId).findAll();
+
+        //Sets the layout of the fragment
+        setTweet(result);
+
+        //Setup the favorite/retweet/layout button (Haven't changed function name)
         setUpTweetLayout();
 
         //Initialize the RecyclerView to hold the replies
@@ -134,7 +166,7 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
                 android.R.integer.config_shortAnimTime);
 
         //initialize the RealmAdapter for the tweet
-        mAdapter = new RealmAdapter(mDataset, rootView, shortAnimationDuration, pFragment, null);
+        mAdapter = new RealmAdapter(mDataset, rootView, shortAnimationDuration, pFragment, null, true);
 
         //Set the adapter to the recyclerview
         mRecyclerView.setAdapter(mAdapter);
@@ -170,58 +202,6 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
             public void success(Result<Tweet> tweetResult) {
                 final Tweet t = tweetResult.data;
 
-                //Set Username/ScreenName  text
-                mUser.setText(t.user.name + " - @" +
-                        t.user.screenName);
-
-                //Set profile image
-                Picasso.with(mProfileImage.getContext()).load(t.user.profileImageUrl).into(
-                        mProfileImage
-                );
-
-                //Set swaptoprofile listener
-                mProfileImage.setOnClickListener( new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        mActivity.swapToProfile(
-                                t.user.screenName);
-
-                    }
-                });
-
-                //Set Media Image
-                if (t.entities != null && (t.entities.media != null)){
-
-                    Picasso.with(mProfileImage.getContext()).load(
-                            t.entities.media.get(0).mediaUrl).fit().into(
-                            mImage
-                    );
-
-                } else  {
-                    mImage.setImageDrawable(null);
-
-                }
-
-                //Set the TweetText
-                String tweetText = t.text;
-
-                //Set Clickable hastags and clicakable profile names
-                ArrayList<int[]> hashtagSpans = getSpans(tweetText, '#');
-                ArrayList<int[]> profileSpans = getSpans(tweetText, '@');
-
-                final SpannableString tweetContent = new SpannableString(tweetText);
-
-                for( int j = 0; j < profileSpans.size(); j ++){
-                    int[] span = profileSpans.get(j);
-                    int profileStart = span[0];
-                    int profileEnd = span[1];
-
-                    tweetContent.setSpan(new ProfileLink(mTweet.getContext(), mActivity),
-                            profileStart, profileEnd, 0);
-                }
-                mTweet.setMovementMethod(LinkMovementMethod.getInstance());
-                mTweet.setText(tweetContent);
 
                 //Setting the replaybutton
                 mReplyButton.setOnClickListener(new View.OnClickListener() {
@@ -236,14 +216,13 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
 
                 //Set initial favorite highlight
                 if(t.favorited){
-                    mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_star_grey600_24dp));
+                    mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_toggle_star_selected));
                 } else {
                     mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_star_outline_grey600_24dp));
                 }
 
                 //setactionlistener
                 setFavoriteButton();
-
 
                 //Set initial retweet highlight
                 if(t.retweeted){
@@ -265,6 +244,80 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
         });
 
 
+    }
+
+
+
+    public void setTweet(RealmResults<TweetRealm> mDataset){
+
+        int i = 0;
+        String user_img = mDataset.get(i).getProfileImageUrl();
+        final String user_screen = mDataset.get(i).getScreename();
+        String media_url = "null";
+        Date created = mDataset.get(i).getDate();
+        boolean retweeted = mDataset.get(i).isRetweetedStatus();
+        String original = mDataset.get(i).getRetweetedBy();
+        String username = mDataset.get(i).getName();
+        String text = mDataset.get(i).getText();
+        final long tId = mDataset.get(i).getId();
+
+
+        //Load Profile Image
+        Picasso.with(mProfileImage.getContext()).load(user_img).transform(new CircleTransform()).into(
+                mProfileImage
+        );
+
+        //Set profile image to go to the users profile
+        mProfileImage.setOnClickListener( new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                mActivity.swapToProfile(user_screen);
+            }
+        });
+
+        final String imageUrl = media_url;
+        ViewGroup.LayoutParams params =  mImage.getLayoutParams();
+
+        //Set Cropped Media image and zoomImage animation
+        if (!imageUrl.equals("null")){
+
+            mImage.getLayoutParams().height = 400;
+            Picasso.with(mImage.getContext()).load(imageUrl).fit().centerCrop().into(
+                    mImage
+            );
+
+
+        } else {
+            //Media is not need so it is hidden.
+            mImage.setImageDrawable(null);
+
+            mImage.getLayoutParams().height = 0;
+
+        }
+
+        //Set Username Text Field
+        Calendar cal = Calendar.getInstance();
+        mDate.setText(DateUtils.getRelativeTimeSpanString(created.getTime()));
+        mUser.setText(username);
+        String tweetText = text;
+
+        //Highlight Profile names/hashtags and their clickable spans
+        ArrayList<int[]> hashtagSpans = getSpans(tweetText, '#');
+        ArrayList<int[]> profileSpans = getSpans(tweetText, '@');
+
+        SpannableString tweetContent = new SpannableString(tweetText);
+
+        for( int j = 0; j < profileSpans.size(); j ++){
+            int[] span = profileSpans.get(j);
+            int profileStart = span[0];
+            int profileEnd = span[1];
+
+            tweetContent.setSpan(new ProfileLink(mTweet.getContext(), mActivity),
+                    profileStart, profileEnd, 0);
+        }
+        mTweet.setMovementMethod(LinkMovementMethod.getInstance());
+        mTweet.setText(tweetContent);
     }
 
     /**
@@ -448,10 +501,18 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
      * @param tweetId The ID of the tweet to show
      * Starts the TweetActivity with the tweetID passed as the intent
      */
-    public void swapToTweet(long tweetId){
+    public void swapToTweet(long tweetId, View view){
         Intent intent = new Intent(getActivity(), TweetActivity.class)
-                .putExtra(TweetActivity.TWEET_KEY, tweetId);
-        startActivity(intent);
+                .putExtra(TweetActivity.TWEET_KEY, tweetId).putExtra(TweetActivity.REALM_KEY, "tweet.realm");
+        String transitionName = getString(R.transition.transition);
+        Log.v(LOG_TAG, transitionName);
+        ActivityOptionsCompat options =
+                ActivityOptionsCompat.makeSceneTransitionAnimation(this.getActivity(),
+                        view,   // The view which starts the transition
+                        transitionName    // The transitionName of the view we’re transitioning to
+                );
+
+        ActivityCompat.startActivity(this.getActivity(), intent, options.toBundle());
     }
 
     @Override
@@ -463,5 +524,43 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
         realm.commitTransaction();
         realm.close();
 
+    }
+
+    /**
+     * Transform a square image into a circular one.
+     */
+
+    public class CircleTransform implements Transformation {
+        @Override
+        public Bitmap transform(Bitmap source) {
+            int size = Math.min(source.getWidth(), source.getHeight());
+
+            int x = (source.getWidth() - size) / 2;
+            int y = (source.getHeight() - size) / 2;
+
+            Bitmap squaredBitmap = Bitmap.createBitmap(source, x, y, size, size);
+            if (squaredBitmap != source) {
+                source.recycle();
+            }
+
+            Bitmap bitmap = Bitmap.createBitmap(size, size, source.getConfig());
+
+            Canvas canvas = new Canvas(bitmap);
+            Paint paint = new Paint();
+            BitmapShader shader = new BitmapShader(squaredBitmap, BitmapShader.TileMode.CLAMP, BitmapShader.TileMode.CLAMP);
+            paint.setShader(shader);
+            paint.setAntiAlias(true);
+
+            float r = size/2f;
+            canvas.drawCircle(r, r, r, paint);
+
+            squaredBitmap.recycle();
+            return bitmap;
+        }
+
+        @Override
+        public String key() {
+            return "circle";
+        }
     }
 }
