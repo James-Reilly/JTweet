@@ -27,11 +27,13 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.os.Build;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.SpannableString;
 import android.text.format.DateUtils;
 import android.text.method.LinkMovementMethod;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -287,7 +289,7 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
 
                 }
             };
-            if(mReplies){
+            if(mReplies && android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
                 viewHolder.mCard.setTransitionName("@transition/no_transition");
             }
 
@@ -479,10 +481,59 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
         mCurrentAnimator = set;
 
 
+
+
         // Upon clicking the zoomed-in image, it should zoom back down
         // to the original bounds and show the thumbnail instead of
         // the expanded image.
         final float startScaleFinal = startScale;
+        mainView.setFocusableInTouchMode(true);
+        mainView.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+        public boolean onKey(View v, int keyCode, KeyEvent event){
+                if (keyCode == KeyEvent.KEYCODE_BACK && expandedImageView.getVisibility() != View.GONE){
+                    if (mCurrentAnimator != null) {
+                        mCurrentAnimator.cancel();
+                    }
+
+                    // Animate the four positioning/sizing properties in parallel,
+                    // back to their original values.
+                    AnimatorSet set = new AnimatorSet();
+                    set.play(ObjectAnimator
+                            .ofFloat(expandedImageView, View.X, startBounds.left))
+                            .with(ObjectAnimator
+                                    .ofFloat(expandedImageView,
+                                            View.Y,startBounds.top))
+                            .with(ObjectAnimator
+                                    .ofFloat(expandedImageView,
+                                            View.SCALE_X, startScaleFinal))
+                            .with(ObjectAnimator
+                                    .ofFloat(expandedImageView,
+                                            View.SCALE_Y, startScaleFinal));
+                    set.setDuration(mShortAnimationDuration);
+                    set.setInterpolator(new DecelerateInterpolator());
+                    set.addListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            thumbView.setAlpha(1f);
+                            expandedImageView.setVisibility(View.GONE);
+                            mCurrentAnimator = null;
+                        }
+
+                        @Override
+                        public void onAnimationCancel(Animator animation) {
+                            thumbView.setAlpha(1f);
+                            expandedImageView.setVisibility(View.GONE);
+                            mCurrentAnimator = null;
+                        }
+                    });
+                    set.start();
+                    mCurrentAnimator = set;
+                    return true;
+                }
+                return false;
+            }
+        });
 
         expandedImageView.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -36,12 +36,7 @@ tools:context="me.jreilly.JamesTweet.TweetView.TweetActivity$PlaceholderFragment
 
             <include layout="@layout/tweet_card" />
 
-            <ImageButton
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/tweet_picture"
-                android:background="@null"
-                />
+
 
             <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:tools="http://schemas.android.com/tools"
@@ -49,7 +44,7 @@ tools:context="me.jreilly.JamesTweet.TweetView.TweetActivity$PlaceholderFragment
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
 
-                android:layout_marginTop="6dp"
+
                 android:orientation="horizontal">
 
                 <ImageButton
@@ -94,6 +89,8 @@ tools:context="me.jreilly.JamesTweet.TweetView.TweetActivity$PlaceholderFragment
 
 
     </android.support.v7.widget.CardView>
+
+
 
     <android.support.v7.widget.RecyclerView
 

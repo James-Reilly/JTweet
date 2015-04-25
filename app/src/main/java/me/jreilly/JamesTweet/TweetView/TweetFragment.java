@@ -33,6 +33,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -92,6 +93,10 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
 
     private String mRealmLoc;
 
+    private TabHost mTabHost;
+    private int currentTab;
+    private View mRoot;
+
     private final String LOG_TAG = "TweetFragment";
     public TweetFragment() {
 
@@ -118,6 +123,7 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
 
 
         View rootView = inflater.inflate(R.layout.fragment_tweet, container, false);
+        mRoot = rootView;
         //Get Visuals to set
         mUser = (TextView) rootView.findViewById(R.id.my_user);
         mTweet = (TextView) rootView.findViewById(R.id.my_text);
@@ -172,6 +178,13 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
         mRecyclerView.setAdapter(mAdapter);
 
         return rootView;
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
+        setUpRealm();
+        getReplies(mTweetId, 15, true);
     }
 
 
@@ -377,7 +390,7 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
      * sets the clickListener for the favorite button
      */
     public void setFavoriteButton(){
-        mFavoriteButton.setOnClickListener( new View.OnClickListener() {
+        mFavoriteButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -393,6 +406,7 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
                                             Toast.LENGTH_SHORT).show();
                                     mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_star_outline_grey600_24dp));
                                 }
+
                                 @Override
                                 public void failure(TwitterException e) {
                                 }
@@ -406,6 +420,7 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
                                             Toast.LENGTH_SHORT).show();
                                     mFavoriteButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_toggle_star_selected));
                                 }
+
                                 @Override
                                 public void failure(TwitterException e) {
                                     Toast.makeText(mFavoriteButton.getContext(), "Exception " + e,
@@ -433,7 +448,7 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
      * sets the clickListener for the retweet button
      */
     public void setRetweetButton(){
-        mRetweetButton.setOnClickListener( new View.OnClickListener() {
+        mRetweetButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -441,9 +456,9 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
                     @Override
                     public void success(Result<Tweet> tweetResult) {
                         Tweet t = tweetResult.data;
-                        if(t.retweeted){
+                        if (t.retweeted) {
                             Log.v(LOG_TAG, t.currentUserRetweet.toString());
-                            String retweetId  = t.currentUserRetweet.toString();
+                            String retweetId = t.currentUserRetweet.toString();
                             int id = retweetId.indexOf("id_str=") + 7;
                             String id2 = retweetId.substring(id, retweetId.length() - 1);
                             Log.v(LOG_TAG, id2);
@@ -456,6 +471,7 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
                                     mRetweetButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_cached_grey600_24dp));
 
                                 }
+
                                 @Override
                                 public void failure(TwitterException e) {
                                     Log.e("TweetFragment", "Exception: " + e);
@@ -472,12 +488,14 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
                                                     .getDrawable(
                                                             R.drawable.ic_action_cached_selected));
                                         }
+
                                         @Override
                                         public void failure(TwitterException e) {
                                         }
                                     });
                         }
                     }
+
                     @Override
                     public void failure(TwitterException e) {
                     }
@@ -514,6 +532,9 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
 
         ActivityCompat.startActivity(this.getActivity(), intent, options.toBundle());
     }
+
+
+
 
     @Override
     public void onDestroy() {

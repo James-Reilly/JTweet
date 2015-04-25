@@ -189,6 +189,8 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
 
 
 
+
+
     public void insertToRealm(Tweet t){
         Realm realm = Realm.getInstance(this.getActivity());
 
@@ -259,6 +261,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         mFab.hide();
         ActivityCompat.startActivity(this.getActivity(), intent, options.toBundle());
     }
+
 
 
 
