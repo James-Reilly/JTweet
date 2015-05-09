@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package me.jreilly.JamesTweet.Profile;
 
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
@@ -26,8 +28,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
-import com.melnykov.fab.FloatingActionButton;
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
@@ -49,7 +51,7 @@ import me.jreilly.JamesTweet.TweetParsers.ProfileSwitch;
 import me.jreilly.JamesTweet.TweetView.TweetActivity;
 
 
-public class ProfileFragment extends android.support.v4.app.Fragment implements ProfileSwitch {
+public class ProfileFragmentV2 extends android.support.v4.app.Fragment implements ProfileSwitch {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -76,6 +78,9 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
 
     private RealmHelper mRealmHelper;
 
+    private Drawable mActionBarBackgroundDrawable;
+
+
     /**
      *
      * @param screenName The Screename of the user being detailed passed as intent
@@ -90,7 +95,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
         return fragment;
     }
 
-    public ProfileFragment() {
+    public ProfileFragmentV2() {
         // Required empty public constructor
     }
 
@@ -109,10 +114,12 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_profile_v2, container, false);
         this.getActivity().setTitle("Profile");
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.my_timeline);
         mRealmHelper = new RealmHelper(this.getActivity(),"profile.realm");
+
+
 
         //Variables for Adapter
         fragView = rootView;
@@ -122,19 +129,28 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
                 android.R.integer.config_shortAnimTime);
 
         //Hide the floating action buttton
-        FloatingActionButton mFab = (FloatingActionButton) rootView.findViewById(R.id.fab);
-        mFab.hide();
+        //FloatingActionButton mFab = (FloatingActionButton) rootView.findViewById(R.id.fab);
+        //mFab.hide();
 
         //Setup pull down the refresh
-        mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.fragment_main_swipe_refresh_layout);
+        /*mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.fragment_main_swipe_refresh_layout);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh(){
                 getTweets(true);
             }
 
-        });
+        });*/
 
+        try {
+            mActionBarBackgroundDrawable = getResources().getDrawable(R.drawable.ab_background);
+            mActionBarBackgroundDrawable.setAlpha(0);
+            ((ProfileActivity)getActivity()).getSupportActionBar().setBackgroundDrawable(mActionBarBackgroundDrawable);
+
+
+        }catch (Exception e){
+            Log.e(LOG_TAG, "Exception: " + e);
+        }
         //Set the layout manager
         mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
@@ -153,7 +169,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
 
                 mDataset = mRealmHelper.getTweets(50);
                 mRecyclerView.getAdapter().notifyDataSetChanged();
-                mSwipeRefreshLayout.setRefreshing(false);
+                //mSwipeRefreshLayout.setRefreshing(false);
 
             }
 
@@ -186,7 +202,6 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
                     @Override
                     public void onLoadMore() {
 
-
                     }
                 });
 
@@ -197,9 +212,14 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
 
     }
 
+
+
+
+
     public void swapToProfile(String uId, View view){
         Intent intent = new Intent(getActivity(), ProfileActivity.class)
                 .putExtra(ProfileActivity.PROFILE_KEY, uId);
+
         startActivity(intent);
         getActivity().finish();
     }
@@ -263,6 +283,7 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
         private boolean loading = true;
         private int visibleThreshold = 5;
         int firstVisibleItem, visibleItemCount, totalItemCount;
+        int y_dir = 0;
 
         private LinearLayoutManager mLinearLayoutManager;
 
@@ -270,13 +291,30 @@ public class ProfileFragment extends android.support.v4.app.Fragment implements 
             this.mLinearLayoutManager = linearLayoutManager;
         }
 
+
+
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy){
             super.onScrolled(recyclerView,dx,dy);
+            y_dir += dy;
 
             visibleItemCount = recyclerView.getChildCount();
             totalItemCount = mLinearLayoutManager.getItemCount();
             firstVisibleItem = mLinearLayoutManager.findFirstVisibleItemPosition();
+
+            if (visibleItemCount == 0) return;
+
+            if(visibleItemCount == 0) return;
+            if(firstVisibleItem != 0) return;
+            ImageView mImageView = (ImageView) recyclerView.getChildAt(0).findViewById(R.id.header_imageview);
+            mImageView.setTranslationY(-recyclerView.getChildAt(0).getTop() / 2);
+
+
+            final int headerHeight = mImageView.getHeight() - ((ProfileActivity)getActivity()).getSupportActionBar().getHeight();
+            final float ratio = (float) Math.min(Math.max(y_dir, 0), headerHeight) / headerHeight;
+            final int newAlpha = (int) (ratio * 255);
+
+            mActionBarBackgroundDrawable.setAlpha(newAlpha);
 
             if (loading){
                 if (totalItemCount > previousToral) {

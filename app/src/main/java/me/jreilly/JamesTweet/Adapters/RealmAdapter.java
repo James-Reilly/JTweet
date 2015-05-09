@@ -33,6 +33,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.SpannableString;
 import android.text.format.DateUtils;
 import android.text.method.LinkMovementMethod;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -101,6 +102,7 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
         public TextView mUser;
         public ImageButton mImage;
         public ImageButton mProfileImage;
+        public ImageButton mProfileImageHeader;
         public LinearLayout mContainer;
         public TextView mRetweeted;
         public TextView mTime;
@@ -135,17 +137,21 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
                 mCard = (CardView) list_item.findViewById(R.id.card_view);
                 Holderid = 1;
 
-            }else if ( type== TYPE_HEADER){
-                mUser = (TextView) list_item.findViewById(R.id.my_user);
+            }else if ( type== TYPE_HEADER) {
+
+                mUser = (TextView) list_item.findViewById(R.id.my_name);
                 mDescription = (TextView) list_item.findViewById(R.id.my_description);
-                mBackground = (ImageView) list_item.findViewById(R.id.ic_background);
-                mProfileImage = (ImageButton) list_item.findViewById(R.id.user_image);
-                mContainer = (LinearLayout) list_item.findViewById(R.id.item_layout_container);
+                mBackground = (ImageView) list_item.findViewById(R.id.header_imageview);
+                mProfileImageHeader = (ImageButton) list_item.findViewById(R.id.avatar);
+
+                //mContainer = (LinearLayout) list_item.findViewById(R.id.item_layout_container);
                 mFollowers = (TextView) list_item.findViewById(R.id.my_followers);
                 mFollowing = (TextView) list_item.findViewById(R.id.my_following);
                 mScreenName = (TextView) list_item.findViewById(R.id.my_screename);
-                mTextUnderlay = (LinearLayout) list_item.findViewById(R.id.linear_back);
+                //mTextUnderlay = (LinearLayout) list_item.findViewById(R.id.linear_back);
+
                 Holderid = 0;
+
             }
 
 
@@ -174,7 +180,7 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
 
         if (i == TYPE_HEADER){
             View v = LayoutInflater.from(viewGroup.getContext())
-                    .inflate(R.layout.profile_card, viewGroup, false);
+                    .inflate(R.layout.profile_header_v2, viewGroup, false);
             return new ViewHolder(v, i);
         }else if(i == TYPE_ITEM){
             View v = LayoutInflater.from(viewGroup.getContext())
@@ -202,20 +208,24 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
             String text = mDataset.get(i).getText();
             final long tId = mDataset.get(i).getId();
 
-
+            String yes = user_img.replaceAll("_normal", "");
             //Load Profile Image
-            Picasso.with(viewHolder.mProfileImage.getContext()).load(user_img).transform(new CircleTransform()).into(
+            Picasso.with(viewHolder.mProfileImage.getContext()).load(yes).transform(new CircleTransform()).into(
                     viewHolder.mProfileImage
             );
+
 
             //Set profile image to go to the users profile
             viewHolder.mProfileImage.setOnClickListener( new View.OnClickListener() {
 
                 @Override
                 public void onClick(View v) {
-                    mActivity.swapToProfile(user_screen);
+                    mActivity.swapToProfile(user_screen, viewHolder.mProfileImage);
                 }
             });
+            if(mProfileName != null){
+                viewHolder.mProfileImage.setTransitionName("@transition/no_transition");
+            }
 
             final String imageUrl = media_url;
             ViewGroup.LayoutParams params =  viewHolder.mImage.getLayoutParams();
@@ -310,20 +320,26 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
                 @Override
                 public void success(Result<User> results) {
                     User mProfile = results.data;
+                    Log.v("RealmAdpater: ", mProfile.profileImageUrl);
+                    String yes = mProfile.profileImageUrl.replaceAll("_normal", "");
+                    Log.v("RealmAdpater: ", yes);
 
-                    Picasso.with(viewHolder.mProfileImage.getContext()).load(mProfile.profileImageUrl).transform(new CircleTransform()).into(
-                            viewHolder.mProfileImage
+                    Picasso.with(viewHolder.mProfileImageHeader.getContext()).load(yes).transform(new CircleTransform()).into(
+                            viewHolder.mProfileImageHeader
                     );
+
                     Picasso.with(viewHolder.mBackground.getContext()).load(mProfile.profileBannerUrl)
                             .resize(viewHolder.mBackground.getWidth(), viewHolder.mBackground.getHeight()).into(
                             viewHolder.mBackground
                     );
+
                     viewHolder.mDescription.setText(mProfile.description);
                     viewHolder.mUser.setText(mProfile.name);
                     viewHolder.mScreenName.setText("@"+mProfile.screenName);
                     viewHolder.mFollowers.setText("Followers: " + mProfile.followersCount);
                     viewHolder.mFollowing.setText("Following: " + mProfile.friendsCount);
-                    viewHolder.mTextUnderlay.setBackgroundColor(Color.parseColor("#AA333333"));
+                    //viewHolder.mTextUnderlay.setBackgroundColor(Color.parseColor("#AA333333"));
+
 
                 }
 
@@ -332,6 +348,8 @@ public class RealmAdapter extends RecyclerView.Adapter<RealmAdapter.ViewHolder>{
 
                 }
             });
+
+
 
 
 

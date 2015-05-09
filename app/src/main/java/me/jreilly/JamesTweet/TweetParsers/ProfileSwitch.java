@@ -22,6 +22,6 @@ import android.view.View;
  */
 
 public interface ProfileSwitch {
-    public void swapToProfile(String uId);
+    public void swapToProfile(String uId, View view);
     public void swapToTweet(long tId, View view);
 }

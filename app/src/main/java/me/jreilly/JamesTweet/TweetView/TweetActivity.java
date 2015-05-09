@@ -71,7 +71,7 @@ public class TweetActivity extends ActionBarActivity implements ProfileSwitch {
 
         return super.onOptionsItemSelected(item);
     }
-    public void swapToProfile(String uId){
+    public void swapToProfile(String uId, View view){
         Intent intent = new Intent(this, ProfileActivity.class)
                 .putExtra(ProfileActivity.PROFILE_KEY, uId);
         startActivity(intent);

@@ -235,11 +235,11 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
      * It then switches the to profile activity of the requested user
      */
 
-    public void swapToProfile(String uId){
+    public void swapToProfile(String uId, View view){
         Intent intent = new Intent(getActivity(), ProfileActivity.class)
                 .putExtra(ProfileActivity.PROFILE_KEY, uId);
-        mFab.hide();
         startActivity(intent);
+        getActivity().finish();
     }
 
     /**

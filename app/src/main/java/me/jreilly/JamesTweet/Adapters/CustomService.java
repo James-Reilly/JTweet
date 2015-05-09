@@ -20,7 +20,10 @@ package me.jreilly.JamesTweet.Adapters;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.models.User;
 
+import me.jreilly.JamesTweet.Etc.twitterRelationship.TwitterRelationship;
+import me.jreilly.JamesTweet.Etc.unfollow.DestroyObject;
 import retrofit.http.GET;
+import retrofit.http.POST;
 import retrofit.http.Query;
 
 /**
@@ -32,6 +35,16 @@ public interface CustomService {
 
     @GET("/1.1/users/show.json")
     void show(@Query("user_id") long id,  Callback<User> cb);
+
+    @GET("/1.1/friendships/show.json")
+    void show(@Query("source_screen_name") String sourceId, @Query("target_screen_name") String targetId, Callback<TwitterRelationship> cb );
+
+
+    @POST("/1.1/friendships/destroy.json")
+    void destroy(@Query("screen_name") String name, Callback<DestroyObject> cb);
+
+    @POST("/1.1/friendships/create.json")
+    void create(@Query("screen_name") String name, @Query("follow") Boolean follow, Callback<DestroyObject> cb);
 
 
 }

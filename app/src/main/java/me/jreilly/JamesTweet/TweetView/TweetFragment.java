@@ -285,7 +285,7 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
 
             @Override
             public void onClick(View v) {
-                mActivity.swapToProfile(user_screen);
+                mActivity.swapToProfile(user_screen, mProfileImage);
             }
         });
 
@@ -508,7 +508,7 @@ public class TweetFragment extends android.support.v4.app.Fragment implements Pr
      * @param uId The ID of the profile to switch to
      * Starts the ProfileActivity with the uID passed as the intent
      */
-    public void swapToProfile(String uId){
+    public void swapToProfile(String uId, View view){
         Intent intent = new Intent(getActivity(), ProfileActivity.class)
                 .putExtra(ProfileActivity.PROFILE_KEY, uId);
         startActivity(intent);

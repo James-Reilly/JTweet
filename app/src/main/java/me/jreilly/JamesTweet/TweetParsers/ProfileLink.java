@@ -70,7 +70,7 @@ public class ProfileLink extends ClickableSpan {
         int end = s.getSpanEnd(this);
         String theWord = s.subSequence(start + 1, end).toString();
 
-        mActivity.swapToProfile(theWord);
+        mActivity.swapToProfile(theWord, widget);
 
 
     }
