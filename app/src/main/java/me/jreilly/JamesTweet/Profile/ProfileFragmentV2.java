@@ -21,7 +21,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -35,10 +34,8 @@ import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.models.Tweet;
-import com.twitter.sdk.android.core.models.User;
 import com.twitter.sdk.android.core.services.StatusesService;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import io.realm.Realm;
@@ -52,48 +49,35 @@ import me.jreilly.JamesTweet.TweetView.TweetActivity;
 
 
 public class ProfileFragmentV2 extends android.support.v4.app.Fragment implements ProfileSwitch {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
+    /** The screen_name of the profile being viewed */
     private String mUserId;
+    /** A vairable to store a generalized callback */
     private Callback<List<Tweet>> mCallBack;
+    /** The RealmAdapter that holds main realm methods for getting/storing tweets */
     private RealmAdapter mTweetAdapter;
-
+    /** The recyclerview to hold the profile's tweets */
     private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter mAdapter;
+    /** The layout manager for the recylerview */
     private RecyclerView.LayoutManager mLayoutManager;
-    private ArrayList<Tweet> mTweetObjects = new ArrayList<>();
-    private SwipeRefreshLayout mSwipeRefreshLayout;
+    /** The Dataset of the profiles tweets for the recyclerview */
     private RealmResults<TweetRealm> mDataset;
-    private final String LOG_TAG = "TweetFetcher";
+    /** The string for log output for this fragment */
+    private final String LOG_TAG = "Profile_FragmentV2";
 
+    /** Variable for holding the animation duration for recyclerview */
     private int mShortAnimationDuration;
+    /** Variable for holding the View for recyclerview */
     private View fragView;
+    /** Variable for holding the fragment for recyclerview */
     private ProfileSwitch mFragment;
 
-    private User mUser;
+
 
     private RealmHelper mRealmHelper;
 
     private Drawable mActionBarBackgroundDrawable;
 
-
-    /**
-     *
-     * @param screenName The Screename of the user being detailed passed as intent
-     * @return The Fragment for the Activity
-     */
-    public static ProfileFragment newInstance(String screenName) {
-        ProfileFragment fragment = new ProfileFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, screenName);
-
-        fragment.setArguments(args);
-        return fragment;
-    }
 
     public ProfileFragmentV2() {
         // Required empty public constructor
@@ -146,8 +130,6 @@ public class ProfileFragmentV2 extends android.support.v4.app.Fragment implement
             mActionBarBackgroundDrawable = getResources().getDrawable(R.drawable.ab_background);
             mActionBarBackgroundDrawable.setAlpha(0);
             ((ProfileActivity)getActivity()).getSupportActionBar().setBackgroundDrawable(mActionBarBackgroundDrawable);
-
-
         }catch (Exception e){
             Log.e(LOG_TAG, "Exception: " + e);
         }
@@ -213,13 +195,15 @@ public class ProfileFragmentV2 extends android.support.v4.app.Fragment implement
     }
 
 
-
-
-
+    /**
+     * @param uId The Screen_name of the profile to switch to
+     * @param view The View to use for the transition
+     * Takes in the profile id (screen_name) of the desired profile to switch to
+     * It then switches the to profile activity of the requested user
+     */
     public void swapToProfile(String uId, View view){
         Intent intent = new Intent(getActivity(), ProfileActivity.class)
                 .putExtra(ProfileActivity.PROFILE_KEY, uId);
-
         startActivity(intent);
         getActivity().finish();
     }

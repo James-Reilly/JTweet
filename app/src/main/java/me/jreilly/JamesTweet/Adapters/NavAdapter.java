@@ -54,6 +54,7 @@ public class NavAdapter extends RecyclerView.Adapter<NavAdapter.ViewHolder> {
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView mRowText;
+        public TextView mRowText2;
         public ImageView mRowIcon;
         public int Holderid;
         public ImageView mBackground;
@@ -64,9 +65,10 @@ public class NavAdapter extends RecyclerView.Adapter<NavAdapter.ViewHolder> {
                 mRowIcon = (ImageView) v.findViewById(R.id.rowIcon);
                 Holderid = 1;
             } else{
-                mRowText = (TextView) v.findViewById(R.id.rowText);
-                mRowIcon = (ImageView) v.findViewById(R.id.rowIcon);
-                mBackground = (ImageView) v.findViewById(R.id.ic_background);
+                mRowText = (TextView) v.findViewById(R.id.my_name);
+                mRowText2 = (TextView) v.findViewById(R.id.my_screename);
+                mRowIcon = (ImageView) v.findViewById(R.id.avatar);
+                mBackground = (ImageView) v.findViewById(R.id.header_imageview);
                 Holderid = 0;
             }
 
@@ -90,7 +92,7 @@ public class NavAdapter extends RecyclerView.Adapter<NavAdapter.ViewHolder> {
             return new ViewHolder(v, viewType);
         }else if (viewType == TYPE_HEADER){
             View v = LayoutInflater.from(viewGroup.getContext())
-                    .inflate(R.layout.nav_header, viewGroup, false);
+                    .inflate(R.layout.nat_header_v2, viewGroup, false);
 
             return new ViewHolder(v, viewType);
         }
@@ -121,15 +123,17 @@ public class NavAdapter extends RecyclerView.Adapter<NavAdapter.ViewHolder> {
             Twitter.getApiClient().getAccountService().verifyCredentials(true, null, new Callback<User>() {
                 @Override
                 public void success(Result<User> userResult) {
+                    String yes = userResult.data.profileImageUrl.replaceAll("_normal", "");
                     Picasso.with(viewHolder.mBackground.getContext()).load(userResult.data.profileBannerUrl)
                             .resize(viewHolder.mBackground.getWidth(), viewHolder.mBackground.getHeight()).into(
                             viewHolder.mBackground
                     );
-                    Picasso.with(viewHolder.mRowIcon.getContext()).load(userResult.data.profileImageUrl).transform(new CircleTransform()).into(
+                    Picasso.with(viewHolder.mRowIcon.getContext()).load(yes).transform(new CircleTransform()).into(
                             viewHolder.mRowIcon
                     );
 
                     viewHolder.mRowText.setText(userResult.data.name);
+                    viewHolder.mRowText2.setText("@" + userResult.data.screenName);
 
                 }
 

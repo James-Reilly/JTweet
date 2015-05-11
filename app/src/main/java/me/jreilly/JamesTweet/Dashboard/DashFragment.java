@@ -230,7 +230,8 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     }
 
     /**
-     * @param uId
+     * @param uId The Screen_name of the profile to switch to
+     * @param view The View to use for the transition
      * Takes in the profile id (screen_name) of the desired profile to switch to
      * It then switches the to profile activity of the requested user
      */
@@ -243,7 +244,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
     }
 
     /**
-     * @param tweetId
+     * @param tweetId The id of the tweet to show
      * Starts the TweetActivity with the tweet of the
      * specified ID.
      */

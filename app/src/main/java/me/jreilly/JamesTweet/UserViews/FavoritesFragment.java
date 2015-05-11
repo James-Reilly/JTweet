@@ -134,7 +134,8 @@ public class FavoritesFragment extends android.support.v4.app.Fragment implement
 
 
     /**
-     * @param uId
+     * @param uId The Screen_name of the profile to switch to
+     * @param view The View to use for the transition
      * Takes in the profile id (screen_name) of the desired profile to switch to
      * It then switches the to profile activity of the requested user
      */

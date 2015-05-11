@@ -16,9 +16,8 @@
 package me.jreilly.JamesTweet.Etc;
 
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -36,6 +35,10 @@ import me.jreilly.JamesTweet.Dashboard.DashActivity;
 import me.jreilly.JamesTweet.R;
 
 
+/**
+ * The Activity to login the current user to the Application
+ * IF the user is already logged in it is skipped
+ */
 public class LoginActivity extends ActionBarActivity {
     TwitterLoginButton mLoginButton;
     private static final String TWITTER_KEY = "0uHL6HeVjnkKnRgw4QtFGUt0c";

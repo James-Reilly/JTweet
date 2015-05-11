@@ -18,7 +18,8 @@ package me.jreilly.JamesTweet.TweetParsers;
 import android.view.View;
 
 /**
- * Created by jreilly on 1/17/15.
+ * Interface for ProfileSwitch to let the recylerview access the correct methods to
+ * swap to tweets/profiles from the adapter
  */
 
 public interface ProfileSwitch {

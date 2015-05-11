@@ -16,7 +16,6 @@
 package me.jreilly.JamesTweet.Profile;
 
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -41,6 +40,8 @@ public class ProfileActivity extends ActionBarActivity {
     public static final String PROFILE_KEY = "profile_id";
     String mUserId;
     Boolean following;
+
+    private final String LOG_TAG = "ProfileAcitivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +77,9 @@ public class ProfileActivity extends ActionBarActivity {
 
         switch (item.getItemId()) {
             case R.id.action_follow:
-                followUnfollow();
+                if(!mUserId.equals(Twitter.getSessionManager().getActiveSession().getUserName())){
+                    followUnfollow();
+                }
                 return true;
             case R.id.action_settings:
                 return true;
@@ -87,6 +90,10 @@ public class ProfileActivity extends ActionBarActivity {
         }
     }
 
+    /**
+     * Checks if the current user if following the selected profile
+     * Updates the UI to reflect any changes
+     */
     public void getFreindships(){
         final MyTwitterApiClient mClient  = new MyTwitterApiClient(Twitter.getSessionManager().getActiveSession());
         final String mMyUsername = Twitter.getSessionManager().getActiveSession().getUserName();
@@ -97,7 +104,7 @@ public class ProfileActivity extends ActionBarActivity {
                 if(result != null && result.data != null){
                     if (result.data.getRelationship().getTarget().isFollowing()){
                         followButton.setIcon(R.drawable.ic_action_social_person_2);
-                        Log.v("PROFILE", "Target: " + result.data.getRelationship().getTarget().isFollowing());
+                        Log.v(LOG_TAG, "Target: " + result.data.getRelationship().getTarget().isFollowing());
 
                     }else{
                         followButton.setIcon(R.drawable.ic_action_social_person_add);
@@ -110,28 +117,31 @@ public class ProfileActivity extends ActionBarActivity {
 
             @Override
             public void failure(TwitterException e) {
-                Log.e("PROFILE", "Freinship Exception: " + e);
+                Log.e(LOG_TAG, "Freinship Exception: " + e);
             }
         });
     }
 
+    /**
+     * If the current user is following the selected user it unfollows the user and updates the UI
+     * If the current user is not following the selected user it follows the user and updates the UI
+     */
     public void followUnfollow(){
+        //get the Twitter API client
         MyTwitterApiClient mClient  = new MyTwitterApiClient(Twitter.getSessionManager().getActiveSession());
-        final String mMyUsername = Twitter.getSessionManager().getActiveSession().getUserName();
-        Drawable isFollowing = this.getResources().getDrawable(R.drawable.ic_action_social_person_2);
-
         if(following){
+            //get the custom service
             mClient.getCustomService().destroy(mUserId, new Callback<DestroyObject>() {
                 @Override
                 public void success(Result<DestroyObject> result) {
-                    Log.v("PROFILE", "Un-Followed!");
-
+                    Log.v(LOG_TAG, "Un-Followed!");
+                    //update UI
                     getFreindships();
                 }
 
                 @Override
                 public void failure(TwitterException e) {
-                    Log.e("PROFILE", "Exception UnFollow: " + e);
+                    Log.e(LOG_TAG, "Exception UnFollow: " + e);
                 }
             });
 
@@ -140,14 +150,14 @@ public class ProfileActivity extends ActionBarActivity {
             mClient.getCustomService().create(mUserId, true, new Callback<DestroyObject>() {
                 @Override
                 public void success(Result<DestroyObject> result) {
-                    Log.v("PROFILE", "Followed!");
-
+                    Log.v(LOG_TAG, "Followed!");
+                    //Update UI
                     getFreindships();
                 }
 
                 @Override
                 public void failure(TwitterException e) {
-                    Log.e("PROFILE", "Exception Follow: " + e);
+                    Log.e(LOG_TAG, "Exception Follow: " + e);
                 }
             });
 
