@@ -21,6 +21,8 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -72,9 +74,12 @@ public class ProfileFragmentV2 extends android.support.v4.app.Fragment implement
     /** Variable for holding the fragment for recyclerview */
     private ProfileSwitch mFragment;
 
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
-
+    private Boolean mIsSticked;
     private RealmHelper mRealmHelper;
+
+    private int selected = 0;
 
     private Drawable mActionBarBackgroundDrawable;
 
@@ -105,6 +110,8 @@ public class ProfileFragmentV2 extends android.support.v4.app.Fragment implement
 
 
 
+
+
         //Variables for Adapter
         fragView = rootView;
         mFragment = this;
@@ -117,14 +124,14 @@ public class ProfileFragmentV2 extends android.support.v4.app.Fragment implement
         //mFab.hide();
 
         //Setup pull down the refresh
-        /*mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.fragment_main_swipe_refresh_layout);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.fragment_main_swipe_refresh_layout);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh(){
                 getTweets(true);
             }
 
-        });*/
+        });
 
         try {
             mActionBarBackgroundDrawable = getResources().getDrawable(R.drawable.ab_background);
@@ -151,12 +158,14 @@ public class ProfileFragmentV2 extends android.support.v4.app.Fragment implement
 
                 mDataset = mRealmHelper.getTweets(50);
                 mRecyclerView.getAdapter().notifyDataSetChanged();
-                //mSwipeRefreshLayout.setRefreshing(false);
+                redrawTabs();
+                mSwipeRefreshLayout.setRefreshing(false);
 
             }
 
             @Override
             public void failure(TwitterException e) {
+                mSwipeRefreshLayout.setRefreshing(false);
                 Log.e(LOG_TAG, "Exception " + e);
 
             }
@@ -257,6 +266,28 @@ public class ProfileFragmentV2 extends android.support.v4.app.Fragment implement
 
     }
 
+
+    /**
+     * Draws the tabs and translates them to the correct position
+     */
+    public void redrawTabs(){
+        if(mRecyclerView != null){
+            fragView.findViewById(R.id.stickyheader).setVisibility(View.VISIBLE);
+            View mView =  mRecyclerView.getChildAt(0);
+            int top = mView.findViewById(R.id.card_view).getTop();
+            int tabsHeight = fragView.findViewById(R.id.stickyheader).getHeight();
+
+
+            int headerViewHeight = mView.findViewById(R.id.card_view).getMeasuredHeight();
+            int delta = headerViewHeight - tabsHeight;
+
+            fragView.findViewById(R.id.stickyheader).setTranslationY(Math.max(((ProfileActivity)
+                    getActivity()).getSupportActionBar().getHeight(), delta + top));
+        }
+
+
+    }
+
     /**
      * Class used to implement endless scrolling of the recyclerveiw
      * Currently goes unused but should return soon
@@ -290,7 +321,10 @@ public class ProfileFragmentV2 extends android.support.v4.app.Fragment implement
 
             if(visibleItemCount == 0) return;
             if(firstVisibleItem != 0) return;
+
+            //Caluclated how translucent the actionbar should be
             ImageView mImageView = (ImageView) recyclerView.getChildAt(0).findViewById(R.id.header_imageview);
+            View mView =  recyclerView.getChildAt(0);
             mImageView.setTranslationY(-recyclerView.getChildAt(0).getTop() / 2);
 
 
@@ -299,6 +333,10 @@ public class ProfileFragmentV2 extends android.support.v4.app.Fragment implement
             final int newAlpha = (int) (ratio * 255);
 
             mActionBarBackgroundDrawable.setAlpha(newAlpha);
+
+            //Tabs stuff
+
+            redrawTabs();
 
             if (loading){
                 if (totalItemCount > previousToral) {

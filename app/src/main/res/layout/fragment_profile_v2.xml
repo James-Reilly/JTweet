@@ -15,7 +15,7 @@
   ~ limitations under the License.
   -->
 
-<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -26,6 +26,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+
+
         <android.support.v7.widget.RecyclerView
             android:id="@+id/my_timeline"
             android:scrollbars="vertical"
@@ -34,7 +36,16 @@
 
 
 
+
+
+
     </android.support.v4.widget.SwipeRefreshLayout>
+
+    <include layout="@layout/sticky_tabs"
+    android:id="@+id/stickyheader"
+             android:visibility="invisible"/>
+
+
 
     <ImageView
         android:id="@+id/expanded_image"
@@ -45,4 +56,4 @@
 
 
 
-</GridLayout>
+</FrameLayout>

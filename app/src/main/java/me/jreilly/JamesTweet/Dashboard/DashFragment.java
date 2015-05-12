@@ -240,7 +240,7 @@ public class DashFragment extends android.support.v4.app.Fragment implements Pro
         Intent intent = new Intent(getActivity(), ProfileActivity.class)
                 .putExtra(ProfileActivity.PROFILE_KEY, uId);
         startActivity(intent);
-        getActivity().finish();
+        
     }
 
     /**
