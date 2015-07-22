@@ -69,8 +69,8 @@ public class DashActivity extends ActionBarActivity{
     String mprofileUrl;
 
     // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
-    private static final String TWITTER_KEY = "0uHL6HeVjnkKnRgw4QtFGUt0c";
-    private static final String TWITTER_SECRET = "eA9rAd6tCbeWcmMhYvPG7Oo5BejcRItnZP0lYO4xv99QmjemCb";
+    private static final String TWITTER_KEY = "";
+    private static final String TWITTER_SECRET = "";
 
     /*String Array of the navigation drawer items */
     String[] navItems = {

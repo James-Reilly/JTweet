@@ -30,8 +30,8 @@ public class TweetTweet extends Application {
     private static TweetTweet mInstance;
     private static Context mAppContext;
 
-    private static final String TWITTER_KEY = "0uHL6HeVjnkKnRgw4QtFGUt0c";
-    private static final String TWITTER_SECRET = "eA9rAd6tCbeWcmMhYvPG7Oo5BejcRItnZP0lYO4xv99QmjemCb";
+    private static final String TWITTER_KEY = "";
+    private static final String TWITTER_SECRET = "";
 
     @Override
     public void onCreate() {

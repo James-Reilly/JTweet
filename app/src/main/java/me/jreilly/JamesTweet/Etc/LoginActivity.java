@@ -41,8 +41,8 @@ import me.jreilly.JamesTweet.R;
  */
 public class LoginActivity extends ActionBarActivity {
     TwitterLoginButton mLoginButton;
-    private static final String TWITTER_KEY = "0uHL6HeVjnkKnRgw4QtFGUt0c";
-    private static final String TWITTER_SECRET = "eA9rAd6tCbeWcmMhYvPG7Oo5BejcRItnZP0lYO4xv99QmjemCb";
+    private static final String TWITTER_KEY = "";
+    private static final String TWITTER_SECRET = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
